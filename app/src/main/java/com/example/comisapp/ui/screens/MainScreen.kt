@@ -47,8 +47,7 @@ fun MainScreen(navController: NavHostController) {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
+                .fillMaxSize(),
             userScrollEnabled = true
         ) { page ->
             when (page) {

@@ -1,6 +1,8 @@
 package com.example.comisapp.ui.screens.primaryNavigationScreens
 
 import android.service.autofill.OnClickAction
+import androidx.activity.SystemBarStyle.Companion.auto
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -17,6 +19,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -27,6 +33,8 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.ManageAccounts
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
@@ -47,6 +55,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.mutableStateOf
@@ -58,17 +67,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.comisapp.R
+import com.example.comisapp.ui.screens.components.CategoryItem
+import com.example.comisapp.ui.screens.components.FavoriteButton
+import com.example.comisapp.ui.screens.components.Product
+import com.example.comisapp.ui.screens.components.ProductCard
 import com.example.comisapp.ui.theme.CardBorderColor
 import com.example.comisapp.ui.theme.TextPurple
 import kotlinx.coroutines.launch
+import java.util.Locale.getDefault
 
 data class DrawerMenuItem(
     val icon: ImageVector,
@@ -82,6 +99,7 @@ data class ProfileMenuItem(
     val onClick: ()-> Unit
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onNavigateToCuenta: ()->Unit = {},
@@ -90,10 +108,10 @@ fun HomeScreen(
     onLogOut: ()-> Unit = {},
     onNotificationsClick: () -> Unit = {},
     profileImageUrl: String? = null,
-    content: @Composable (PaddingValues)-> Unit
 ){
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val drawerMenuItems = listOf(
         DrawerMenuItem(
             icon = ImageVector.vectorResource(R.drawable.ic_profile),
@@ -148,17 +166,167 @@ fun HomeScreen(
         }
     ) {
         Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 AppHeader(
                     profileImageUrl = profileImageUrl,
                     onMenuClick = { scope.launch { drawerState.open() } },
                     onNavigateToCuenta = onNavigateToCuenta,
                     onCerrarSesion = onLogOut,
+                    scrollBehavior = scrollBehavior
                     onNotificationsClick = onNotificationsClick
                 )
             },
-            content = content
-        )
+
+        ){
+            padding ->
+            val favoriteStates = remember { mutableStateListOf(*Array(10) { false }) }
+
+            Column(
+                modifier = Modifier.padding(padding).padding(bottom = 55.dp).fillMaxSize().background(Color.White)
+
+            ){
+
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ){
+                    item(span = {GridItemSpan(2)}) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "QUIZAS PODRÍA INTERESARTE",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 11.sp,
+                                    letterSpacing = 1.1.sp,
+                                    color = Color(0xFF474747)
+                                ),
+                            )
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color.White
+                                    ),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                                ){
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(300.dp)
+                                            .padding(5.dp)
+                                    ) {
+                                        Image(
+                                            painter = painterResource(R.drawable.img_mas_destacado),
+                                            contentDescription = "destacado",
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(RoundedCornerShape(8.dp))
+                                        )
+
+                                        Box(
+                                            modifier = Modifier
+                                                .align(Alignment.BottomStart)
+                                                .padding(25.dp)
+                                        ){
+                                            Column(
+                                            ) {
+                                                Text(
+                                                    text = "Lo Más \nDestacado",
+                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                        color = Color.White,
+                                                        fontSize = 36.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        lineHeight = 40.sp,
+                                                        letterSpacing = -1.8.sp
+                                                    ),
+                                                    maxLines = 2,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Text(
+                                                    text = "Conoce lo productos mas solicitados por nuestros usuarios",
+                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                        color = Color.White.copy(alpha = 0.6f),
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.Normal,
+                                                        lineHeight = 20.sp,
+                                                        letterSpacing = 0.sp
+                                                    ),
+                                                    maxLines = 2,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+
+                                            }
+
+                                        }
+
+                                    }
+                                Spacer(modifier = Modifier.height(25.dp))
+                                Text(
+                                    text = "CATEGORÍAS SUGERIDAS",
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 11.sp,
+                                        letterSpacing = 1.1.sp,
+                                        color = Color(0xFF474747)
+                                    ),
+                                )
+                                Spacer(modifier = Modifier.height(15.dp))
+                                LazyRow(
+                                    horizontalArrangement = Arrangement.spacedBy(15.dp)
+
+                                ) {
+                                    items(10){
+                                        index ->
+                                        CategoryItem(
+                                            imageRes = R.drawable.login_lock_img,
+                                            label = "Seguridad"
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(25.dp))
+                                Text(text = "Recomendaciones para ti",style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = -(0.6).sp,
+                                    fontSize = 24.sp
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(10.dp))
+                                HorizontalDivider(thickness = 0.5.dp, color = CardBorderColor.copy(alpha = 0.2f))
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                            }
+                        }
+
+                    }
+                    items(10){
+                        index ->
+                        ProductCard(
+                            product = Product(
+                                id = index,
+                                brand = "Sony Electronics",
+                                name = "Wireless Studio Headphones",
+                                price = "6,000.00 L.",
+                                imageRes = R.drawable.testportada,
+                                isFavorite = favoriteStates[index]
+                            ),
+                            onFavoriteToggle = { _, newState -> favoriteStates[index] = newState }
+                        )
+                    }
+                }
+
+
+            }
+
+
+        }
     }
 
 
@@ -299,6 +467,7 @@ fun AppSidebarContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppHeader(
+    scrollBehavior: TopAppBarScrollBehavior,
     profileImageUrl: String? = null,
     onMenuClick: () -> Unit = {},
     onNavigateToCuenta: () -> Unit = {},
@@ -307,8 +476,8 @@ fun AppHeader(
 
 ) {
     CenterAlignedTopAppBar(
-        modifier = Modifier.shadow(elevation = 0.5.dp).padding(horizontal = 5.dp),
-        windowInsets = WindowInsets(0),
+        scrollBehavior = scrollBehavior,
+        modifier = Modifier.shadow(elevation = 0.5.dp),
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.White
         ),
