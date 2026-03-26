@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = nav,
-                    startDestination = "onboarding",
+                    startDestination = "principal",
                     modifier = Modifier.fillMaxSize()
                 ){
                     composable("onboarding"){
