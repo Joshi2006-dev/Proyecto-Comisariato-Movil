@@ -5,8 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -18,6 +16,9 @@ import com.example.comisapp.ui.screens.MainScreen
 import com.example.comisapp.ui.screens.OnboardingScreen
 import com.example.comisapp.ui.screens.auth.LoginScreen
 import com.example.comisapp.ui.screens.auth.RecoveryScreen
+import com.example.comisapp.ui.screens.secondaryNavigationScreens.HelpCenterScreen
+import com.example.comisapp.ui.screens.secondaryNavigationScreens.NotificationScreen
+import com.example.comisapp.ui.screens.secondaryNavigationScreens.SuggestionScreen
 import com.example.comisapp.ui.theme.ComisAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -65,8 +66,33 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable("principal"){
-                        MainScreen()
+                        MainScreen(navController = nav)
                     }
+
+                    composable("notification"){
+                        NotificationScreen(
+                            onBackClick = {
+                                nav.popBackStack()
+                            }
+                        )
+                    }
+
+                    composable("helpCenter"){
+                        HelpCenterScreen(
+                            onBackClick = {
+                                nav.popBackStack()
+                            }
+                        )
+                    }
+
+                    composable("sugerencias"){
+                        SuggestionScreen(
+                            onBackClick = {
+                                nav.popBackStack()
+                            }
+                        )
+                    }
+
 
                 }
             }

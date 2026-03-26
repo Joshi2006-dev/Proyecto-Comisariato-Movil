@@ -88,6 +88,7 @@ fun HomeScreen(
     onNavigateToCentroAyuda: ()->Unit = {},
     onNavigateToSugerencias: ()->Unit = {},
     onLogOut: ()-> Unit = {},
+    onNotificationsClick: () -> Unit = {},
     profileImageUrl: String? = null,
     content: @Composable (PaddingValues)-> Unit
 ){
@@ -152,7 +153,8 @@ fun HomeScreen(
                     profileImageUrl = profileImageUrl,
                     onMenuClick = { scope.launch { drawerState.open() } },
                     onNavigateToCuenta = onNavigateToCuenta,
-                    onCerrarSesion = onLogOut
+                    onCerrarSesion = onLogOut,
+                    onNotificationsClick = onNotificationsClick
                 )
             },
             content = content
@@ -300,7 +302,9 @@ fun AppHeader(
     profileImageUrl: String? = null,
     onMenuClick: () -> Unit = {},
     onNavigateToCuenta: () -> Unit = {},
-    onCerrarSesion: () -> Unit = {}
+    onCerrarSesion: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {}
+
 ) {
     CenterAlignedTopAppBar(
         modifier = Modifier.shadow(elevation = 0.5.dp).padding(horizontal = 5.dp),
@@ -338,7 +342,12 @@ fun AppHeader(
             }
         },
         actions = {
-            IconButton(onClick = {  }) {
+
+            IconButton(
+                onClick = {
+                    onNotificationsClick()
+                }
+            ) {
                 Icon(
                     imageVector = Icons.Filled.Notifications,
                     contentDescription = "Notificaciones",
