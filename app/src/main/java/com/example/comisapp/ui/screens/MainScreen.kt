@@ -16,7 +16,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import com.example.comisapp.ui.navigation.BottomBarScreen
 import com.example.comisapp.ui.navigation.CustomBottomBar
+import com.example.comisapp.ui.screens.primaryNavigationScreens.CatalogScreen
+import com.example.comisapp.ui.screens.primaryNavigationScreens.CreditScreen
 import com.example.comisapp.ui.screens.primaryNavigationScreens.HomeScreen
+import com.example.comisapp.ui.screens.primaryNavigationScreens.SaveScreen
 import kotlinx.coroutines.launch
 
 @Composable
@@ -43,7 +46,7 @@ fun MainScreen(navController: NavHostController) {
                 }
             )
         }
-    ) { innerPadding ->
+    ) { innerPading ->
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
@@ -66,12 +69,16 @@ fun MainScreen(navController: NavHostController) {
                         }
                     )
                 1 ->
-                    Text("Esta es el Catalogoso", modifier = Modifier.fillMaxWidth())
+                    CatalogScreen()
                 2 ->
-                    Text("Esta es el Creditoso", modifier = Modifier.fillMaxWidth())
+                    CreditScreen(
+                        onOpenDetail = {
+                            navController.navigate("detalleCredito")
+                        }
+                    )
 
                 3 ->
-                    Text("Esta es el Guardoso", modifier = Modifier.fillMaxWidth())
+                    SaveScreen()
             }
         }
     }
