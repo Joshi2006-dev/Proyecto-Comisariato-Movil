@@ -1,5 +1,6 @@
 package com.example.comisapp.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.comisapp.ui.navigation.BottomBarScreen
 import com.example.comisapp.ui.navigation.CustomBottomBar
+import com.example.comisapp.ui.screens.primaryNavigationScreens.HomeScreen
 import com.example.comisapp.ui.theme.CardBorderColor
 import com.example.comisapp.ui.theme.TextPurple
 import kotlinx.coroutines.launch
@@ -62,7 +64,13 @@ fun MainScreen() {
         ) { page ->
             when (page) {
                 0 ->
-                    Text("Esta es la homsita", modifier = Modifier.fillMaxWidth())
+                    HomeScreen() {
+                        contentPadding ->
+                        Box(modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.White)
+                        )
+                    }
                 1 ->
                     Text("Esta es el Catalogoso", modifier = Modifier.fillMaxWidth())
                 2 ->
