@@ -1,37 +1,26 @@
 package com.example.comisapp.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.comisapp.ui.navigation.BottomBarScreen
 import com.example.comisapp.ui.navigation.CustomBottomBar
 import com.example.comisapp.ui.screens.primaryNavigationScreens.HomeScreen
-import com.example.comisapp.ui.theme.CardBorderColor
-import com.example.comisapp.ui.theme.TextPurple
 import kotlinx.coroutines.launch
 
 @Composable
-fun MainScreen() {
+fun MainScreen(navController: NavHostController) {
     val screens = listOf(
         BottomBarScreen.Home,
         BottomBarScreen.Catalogo,
@@ -64,7 +53,19 @@ fun MainScreen() {
         ) { page ->
             when (page) {
                 0 ->
-                    HomeScreen() {
+                    HomeScreen(
+
+                        onNavigateToCentroAyuda = {
+                            navController.navigate("helpCenter")
+                        },
+                        onNavigateToSugerencias = {
+                            navController.navigate("sugerencias")
+                        },
+
+                        onNotificationsClick = {
+                            navController.navigate("notification")
+                        }
+                    ) {
                         contentPadding ->
                         Box(modifier = Modifier
                             .fillMaxSize()
