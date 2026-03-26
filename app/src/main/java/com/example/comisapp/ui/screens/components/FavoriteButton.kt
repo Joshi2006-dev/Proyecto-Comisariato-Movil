@@ -5,7 +5,12 @@ import android.media.AudioAttributes
 import android.media.SoundPool
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -13,12 +18,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.comisapp.R
+import com.example.comisapp.ui.theme.CardBorderColor
+import com.example.comisapp.ui.theme.TextPurple
 
 class FavoriteSoundManager(context: Context) {
 
@@ -78,9 +86,9 @@ fun FavoriteButton(
         label = "favorite_scale"
     )
 
-    // ── Color animado ──
+
     val tint by animateColorAsState(
-        targetValue = if (isFavorite) Color(0xFFE53935) else Color(0xFFBDBDBD),
+        targetValue = if (isFavorite) TextPurple else Color(0xFFBDBDBD),
         animationSpec = tween(durationMillis = 200),
         label = "favorite_color"
     )
@@ -94,15 +102,21 @@ fun FavoriteButton(
                 soundManager.play()
             }
         },
-        modifier = modifier
     ) {
-        Icon(
-            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            contentDescription = if (isFavorite) "Quitar de favoritos" else "Agregar a favoritos",
-            tint = tint,
-            modifier = Modifier
-                .size(22.dp)
-                .scale(scale)
-        )
+        Box(
+            modifier = Modifier.background(Color.White, RoundedCornerShape(2.dp)).size(70.dp)
+                .padding(8.dp),
+            contentAlignment = Alignment.Center
+        ){
+            Icon(
+                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                contentDescription = if (isFavorite) "Quitar de favoritos" else "Agregar a favoritos",
+                tint = tint,
+                modifier = Modifier
+                    .size(50.dp)
+                    .scale(scale)
+            )
+        }
+
     }
 }

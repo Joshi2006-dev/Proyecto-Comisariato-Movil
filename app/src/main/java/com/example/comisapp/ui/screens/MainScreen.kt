@@ -58,19 +58,12 @@ fun MainScreen() {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
+                .fillMaxSize(),
             userScrollEnabled = true
         ) { page ->
             when (page) {
                 0 ->
-                    HomeScreen() {
-                        contentPadding ->
-                        Box(modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.White)
-                        )
-                    }
+                    HomeScreen()
                 1 ->
                     Text("Esta es el Catalogoso", modifier = Modifier.fillMaxWidth())
                 2 ->

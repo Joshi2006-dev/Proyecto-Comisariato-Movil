@@ -132,7 +132,7 @@ fun LoginScreen(
                     modifier = Modifier
                         .size(120.dp)
                         .clip(CircleShape)
-                        .background(LogoBg),
+                        .background(Color.Black),
                     contentAlignment = Alignment.Center
                 ){}
                 Image(
