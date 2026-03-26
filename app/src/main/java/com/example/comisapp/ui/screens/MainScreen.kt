@@ -64,13 +64,7 @@ fun MainScreen(navController: NavHostController) {
                         onNotificationsClick = {
                             navController.navigate("notification")
                         }
-                    ) {
-                        contentPadding ->
-                        Box(modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.White)
-                        )
-                    }
+                    )
                 1 ->
                     Text("Esta es el Catalogoso", modifier = Modifier.fillMaxWidth())
                 2 ->

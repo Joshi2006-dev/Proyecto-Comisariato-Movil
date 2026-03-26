@@ -173,7 +173,7 @@ fun HomeScreen(
                     onMenuClick = { scope.launch { drawerState.open() } },
                     onNavigateToCuenta = onNavigateToCuenta,
                     onCerrarSesion = onLogOut,
-                    scrollBehavior = scrollBehavior
+                    scrollBehavior = scrollBehavior,
                     onNotificationsClick = onNotificationsClick
                 )
             },
