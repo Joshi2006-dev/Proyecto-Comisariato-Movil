@@ -106,6 +106,7 @@ fun HomeScreen(
     onNavigateToCentroAyuda: ()->Unit = {},
     onNavigateToSugerencias: ()->Unit = {},
     onLogOut: ()-> Unit = {},
+    onNotificationsClick: () -> Unit = {},
     profileImageUrl: String? = null,
 ){
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -173,6 +174,7 @@ fun HomeScreen(
                     onNavigateToCuenta = onNavigateToCuenta,
                     onCerrarSesion = onLogOut,
                     scrollBehavior = scrollBehavior
+                    onNotificationsClick = onNotificationsClick
                 )
             },
 
@@ -469,7 +471,9 @@ fun AppHeader(
     profileImageUrl: String? = null,
     onMenuClick: () -> Unit = {},
     onNavigateToCuenta: () -> Unit = {},
-    onCerrarSesion: () -> Unit = {}
+    onCerrarSesion: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {}
+
 ) {
     CenterAlignedTopAppBar(
         scrollBehavior = scrollBehavior,
@@ -507,7 +511,12 @@ fun AppHeader(
             }
         },
         actions = {
-            IconButton(onClick = {  }) {
+
+            IconButton(
+                onClick = {
+                    onNotificationsClick()
+                }
+            ) {
                 Icon(
                     imageVector = Icons.Filled.Notifications,
                     contentDescription = "Notificaciones",
