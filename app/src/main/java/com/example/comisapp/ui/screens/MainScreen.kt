@@ -63,6 +63,9 @@ fun MainScreen(navController: NavHostController) {
                         onNavigateToSugerencias = {
                             navController.navigate("sugerencias")
                         },
+                        onNavigateToCuenta = {
+                            navController.navigate("account")
+                        },
 
                         onNotificationsClick = {
                             navController.navigate("notification")

@@ -20,6 +20,7 @@ import com.example.comisapp.ui.screens.MainScreen
 import com.example.comisapp.ui.screens.OnboardingScreen
 import com.example.comisapp.ui.screens.auth.LoginScreen
 import com.example.comisapp.ui.screens.auth.RecoveryScreen
+import com.example.comisapp.ui.screens.secondaryNavigationScreens.AccountScreen
 import com.example.comisapp.ui.screens.secondaryNavigationScreens.HelpCenterScreen
 import com.example.comisapp.ui.screens.secondaryNavigationScreens.NotificationScreen
 import com.example.comisapp.ui.screens.secondaryNavigationScreens.SuggestionScreen
@@ -99,14 +100,26 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+                    
 
                     composable("detalleCredito"){
                         DetalleCreditoScreen(
                             onBack = {
+                              nav.popBackStack()
+                            }
+                        )
+                    }          
+                              
+                              
+                    composable("account"){
+                        AccountScreen(
+                            onBackClick = {
                                 nav.popBackStack()
                             }
                         )
                     }
+
+
 
 
                 }
