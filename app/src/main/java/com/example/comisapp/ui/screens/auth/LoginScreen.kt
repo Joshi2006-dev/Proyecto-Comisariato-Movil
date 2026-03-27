@@ -54,6 +54,10 @@ import com.example.comisapp.ui.theme.LogoBg
 import com.example.comisapp.ui.theme.TextDark
 import com.example.comisapp.ui.theme.TextGray
 import com.example.comisapp.ui.theme.TextPurple
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.comisapp.data.repository.AuthRepository
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 
 private fun Modifier.glassBorder(): Modifier =
@@ -67,12 +71,19 @@ private fun Modifier.glassBorder(): Modifier =
 fun LoginScreen(
     onLoginSuccess: () -> Unit = {},
     onForgotPasswordClick: () -> Unit = {}
+
+
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var screenSize by remember { mutableStateOf(IntSize.Zero) }
     val density = LocalDensity.current
+
+    val repo = remember { AuthRepository() }
+    val scope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
 
     Box(
         modifier = Modifier
@@ -303,7 +314,28 @@ fun LoginScreen(
 
                     Spacer(Modifier.height(28.dp))
 
-                    ButtonComponent(text = "ENTRAR", onClick = onLoginSuccess)
+
+                    error?.let {
+                        Text(it, color = Color.Red, fontSize = 12.sp)
+                        Spacer(Modifier.height(8.dp))
+                    }
+                    ButtonComponent(
+                        text = if (isLoading) "ENTRANDO..." else "ENTRAR",
+                        onClick = {
+                            scope.launch {
+                                isLoading = true
+                                error = null
+                                try {
+                                    repo.login(email, password)
+                                    onLoginSuccess()
+                                } catch (e: Exception) {
+                                    error = "Correo o contraseña incorrectos"
+                                } finally {
+                                    isLoading = false
+                                }
+                            }
+                        }
+                    )
                 }
             }
         }
