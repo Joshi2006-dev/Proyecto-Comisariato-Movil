@@ -23,3 +23,5 @@ val LabelColor      = Color(0xFF555566)
 val IconColor       = Color(0xFFAAAAAA)
 val ButtonBg        = Color(0xFF111111)
 val LogoBg          = Color(0xFF1A1A2E)
+
+val AppBg           = Color(0xFFF8F9FF)
