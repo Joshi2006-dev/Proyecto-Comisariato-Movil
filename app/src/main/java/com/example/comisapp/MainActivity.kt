@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
@@ -21,6 +22,7 @@ import com.example.comisapp.ui.screens.secondaryNavigationScreens.HelpCenterScre
 import com.example.comisapp.ui.screens.secondaryNavigationScreens.NotificationScreen
 import com.example.comisapp.ui.screens.secondaryNavigationScreens.SuggestionScreen
 import com.example.comisapp.ui.theme.ComisAppTheme
+import com.example.comisapp.data.repository.AuthRepository
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,10 +31,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             ComisAppTheme {
                 val nav = rememberNavController()
+                val repo = remember { AuthRepository() }
 
                 NavHost(
                     navController = nav,
-                    startDestination = "principal",
+                    startDestination = if (repo.islogged()) "principal" else "onboarding",
                     modifier = Modifier.fillMaxSize()
                 ){
                     composable("onboarding"){
