@@ -1,5 +1,6 @@
 package com.example.comisapp.ui.screens.primaryNavigationScreens
 
+import android.R.attr.text
 import android.service.autofill.OnClickAction
 import androidx.activity.SystemBarStyle.Companion.auto
 import androidx.compose.foundation.Image
@@ -102,6 +103,7 @@ data class ProfileMenuItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    externalPadding: PaddingValues = PaddingValues(0.dp),
     onNavigateToCuenta: ()->Unit = {},
     onNavigateToCentroAyuda: ()->Unit = {},
     onNavigateToSugerencias: ()->Unit = {},
@@ -178,25 +180,25 @@ fun HomeScreen(
                 )
             },
 
-        ){
-            padding ->
+        ){ paddingValues ->
             val favoriteStates = remember { mutableStateListOf(*Array(10) { false }) }
 
             Column(
-                modifier = Modifier.padding(padding).padding(bottom = 55.dp).fillMaxSize().background(Color.White)
+                modifier = Modifier.padding(paddingValues).fillMaxSize().background(Color.White)
 
             ){
 
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    contentPadding = PaddingValues(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
                 ){
                     item(span = {GridItemSpan(2)}) {
                         Column(
                             modifier = Modifier.fillMaxWidth()
                         ) {
+                            Spacer(modifier = Modifier.height(10.dp))
                             Text(
                                 text = "QUIZAS PODRÍA INTERESARTE",
                                 style = MaterialTheme.typography.titleLarge.copy(
@@ -206,6 +208,7 @@ fun HomeScreen(
                                     color = Color(0xFF474747)
                                 ),
                             )
+                            Spacer(modifier = Modifier.height(5.dp))
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(16.dp),
@@ -320,6 +323,10 @@ fun HomeScreen(
                             onFavoriteToggle = { _, newState -> favoriteStates[index] = newState }
                         )
                     }
+                    item {
+                        Spacer(modifier = Modifier.height(60.dp))
+                    }
+
                 }
 
 
