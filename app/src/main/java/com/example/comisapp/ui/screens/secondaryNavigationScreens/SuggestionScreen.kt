@@ -3,6 +3,7 @@ package com.example.comisapp.ui.screens.secondaryNavigationScreens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,14 +19,36 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.comisapp.data.repository.SuggestionRepository
+import com.example.comisapp.ui.screens.ViewModels.SuggestionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SuggestionScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    suggestionViewModel: SuggestionViewModel = viewModel(
+        factory = SuggestionViewModel.Factory(SuggestionRepository())
+    )
 ) {
     val sheetState = rememberModalBottomSheetState()
     var showSheet by remember { mutableStateOf(false) }
+
+    val sugerencias by suggestionViewModel.sugerencias.collectAsState()
+    val isLoading by suggestionViewModel.isLoading.collectAsState()
+    val enviado by suggestionViewModel.enviado.collectAsState()
+
+    var asunto by remember { mutableStateOf("") }
+    var descripcion by remember { mutableStateOf("") }
+
+    LaunchedEffect(enviado) {
+        if (enviado) {
+            showSheet = false
+            asunto = "" // pa que se limpellen los campos
+            descripcion = ""
+            suggestionViewModel.resetEnviado()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -69,6 +92,7 @@ fun SuggestionScreen(
             }
         }
     ) { paddingValues ->
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -79,16 +103,13 @@ fun SuggestionScreen(
         ) {
             item {
                 Spacer(modifier = Modifier.height(40.dp))
-
                 Icon(
                     imageVector = Icons.Default.Lightbulb,
                     contentDescription = null,
                     tint = Color(0xFF8B5CF6),
                     modifier = Modifier.size(90.dp)
                 )
-
                 Spacer(modifier = Modifier.height(24.dp))
-
                 Text(
                     text = "¿Tienes alguna\nidea?",
                     fontSize = 30.sp,
@@ -97,9 +118,7 @@ fun SuggestionScreen(
                     lineHeight = 34.sp,
                     textAlign = TextAlign.Center
                 )
-
                 Spacer(modifier = Modifier.height(16.dp))
-
                 Text(
                     text = "Comentanos como podemos mejorar\nla calidad de nuestros servicios.",
                     fontSize = 15.sp,
@@ -107,11 +126,14 @@ fun SuggestionScreen(
                     lineHeight = 22.sp,
                     textAlign = TextAlign.Center
                 )
-
                 Spacer(modifier = Modifier.height(32.dp))
             }
 
-            item {
+            items(sugerencias) { sugerencia ->
+                val fecha = sugerencia.fechaRegistro?.toDate()?.let {
+                    java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault()).format(it)
+                } ?: ""
+
                 Card(
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -119,21 +141,17 @@ fun SuggestionScreen(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
-                        Text(
-                            text = "Oct 15, 2023",
-                            fontSize = 12.sp,
-                            color = Color(0xFF9CA3AF)
-                        )
+                        Text(text = fecha, fontSize = 12.sp, color = Color(0xFF9CA3AF))
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Dar mas opciones de pagos en cuotas",
+                            text = sugerencia.asunto,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1F2937)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Deberian de agregar mas plazos en la opciones de pagos por coutas, asi se es mas accesible a productos mas caros.",
+                            text = sugerencia.descripcion,
                             fontSize = 14.sp,
                             color = Color(0xFF4B5563),
                             lineHeight = 20.sp
@@ -163,7 +181,6 @@ fun SuggestionScreen(
                         fontWeight = FontWeight.Black,
                         color = Color(0xFF0F172A)
                     )
-
                     Text(
                         text = "Tu voz nos ayuda a construir una plataforma mejor para todos.",
                         fontSize = 14.sp,
@@ -173,22 +190,44 @@ fun SuggestionScreen(
                     )
 
                     SuggestionLabel("ASUNTO:")
-                    CustomInputField(placeholder = "Escribe un título para tu sugerencia...", lines = 1)
+                    CustomInputField(
+                        value = asunto,
+                        onValueChange = { asunto = it },
+                        placeholder = "Escribe un título para tu sugerencia...",
+                        lines = 1
+                    )
 
                     Spacer(modifier = Modifier.height(20.dp))
 
                     SuggestionLabel("CONTENIDO DE LA SUGERENCIA")
-                    CustomInputField(placeholder = "Escribe aquí tu idea, mejora o comentario...", lines = 5)
+                    CustomInputField(
+                        value = descripcion,
+                        onValueChange = { descripcion = it },
+                        placeholder = "Escribe aquí tu idea, mejora o comentario...",
+                        lines = 5
+                    )
 
                     Spacer(modifier = Modifier.height(32.dp))
 
                     Button(
-                        onClick = { showSheet = false },
+                        onClick = {
+                            val usuarioId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: ""
+                            suggestionViewModel.enviarSugerencia(usuarioId, asunto, descripcion)
+                        },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        enabled = !isLoading
                     ) {
-                        Text("ENVIAR SUGERENCIA", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("ENVIAR SUGERENCIA", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        }
                     }
 
                     TextButton(onClick = { showSheet = false }) {
@@ -212,11 +251,15 @@ fun SuggestionLabel(text: String) {
 }
 
 @Composable
-fun CustomInputField(placeholder: String, lines: Int) {
-    var text by remember { mutableStateOf("") }
+fun CustomInputField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    lines: Int
+) {
     OutlinedTextField(
-        value = text,
-        onValueChange = { text = it },
+        value = value,
+        onValueChange = onValueChange,
         modifier = Modifier.fillMaxWidth(),
         placeholder = { Text(placeholder, fontSize = 14.sp, color = Color(0xFF9CA3AF)) },
         shape = RoundedCornerShape(12.dp),

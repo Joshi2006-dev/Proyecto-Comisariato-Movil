@@ -18,12 +18,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.comisapp.data.repository.AyudaRepository
+import com.example.comisapp.ui.screens.ViewModels.HelpCenterViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HelpCenterScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    helpCenterViewModel: HelpCenterViewModel = viewModel(
+        factory = HelpCenterViewModel.Factory(AyudaRepository())
+    )
 ) {
+    val ayudas by helpCenterViewModel.ayudas.collectAsState()
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
