@@ -17,7 +17,8 @@ import com.example.comisapp.ui.theme.ButtonBg
 @Composable
 fun ButtonComponent(
     onClick: ()-> Unit = {},
-    text: String =""
+    text: String ="",
+    isEnabled: Boolean = true,
 ){
     Button(
         onClick = { onClick() },
@@ -25,6 +26,7 @@ fun ButtonComponent(
             .fillMaxWidth()
             .height(52.dp),
         shape = RoundedCornerShape(14.dp),
+        enabled = isEnabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = ButtonBg,
             contentColor = Color.White

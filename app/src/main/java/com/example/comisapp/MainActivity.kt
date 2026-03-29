@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -28,6 +29,10 @@ import com.example.comisapp.ui.screens.secondaryNavigationScreens.SuggestionScre
 import com.example.comisapp.ui.screens.transactionScreens.DetalleCreditoScreen
 import com.example.comisapp.ui.theme.ComisAppTheme
 import com.example.comisapp.data.repository.AuthRepository
+import com.example.comisapp.ui.screens.ProductDetailScreen
+import com.example.comisapp.ui.screens.auth.AuthViewModel
+import com.example.comisapp.ui.screens.auth.ChangePasswordScreen
+import com.example.comisapp.ui.screens.sampleProduct
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,11 +47,7 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = nav,
-<<<<<<< Pantallas-Independientes
-                    startDestination = if (repo.islogged()) "principal" else "onboarding",
-=======
-                    startDestination = "onboarding",
->>>>>>> master
+                    startDestination = if (repo.islogged()) "principal" else "login",
                     modifier = Modifier.fillMaxSize()
                 ){
                     composable("onboarding"){
@@ -67,7 +68,11 @@ class MainActivity : ComponentActivity() {
                                 nav.navigate("recovery")
                             },
                             onLoginSuccess = {
-                                nav.navigate("principal")
+                                nav.navigate("principal"){
+                                    popUpTo("login"){
+                                        inclusive = true
+                                    }
+                                }
                             }
                         )
                     }
@@ -81,7 +86,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable("principal"){
-                        MainScreen(navController = nav)
+                        MainScreen(navController = nav, authRepo = repo)
                     }
 
                     composable("notification"){
@@ -121,6 +126,29 @@ class MainActivity : ComponentActivity() {
                     composable("account"){
                         AccountScreen(
                             onBackClick = {
+                                nav.popBackStack()
+                            },
+                            nav = nav
+                        )
+                    }
+
+                    composable("changePassword"){
+                        val authViewModel : AuthViewModel = viewModel(factory = AuthViewModel.Factory(repo))
+                        ChangePasswordScreen(
+                            viewModel = authViewModel,
+                            onSucces = {
+                                nav.popBackStack()
+                            },
+                            onBackClick = {
+                                nav.popBackStack()
+                            }
+                        )
+                    }
+
+                    composable("productDetail"){
+                        ProductDetailScreen(
+                            product = sampleProduct,
+                            onBack = {
                                 nav.popBackStack()
                             }
                         )

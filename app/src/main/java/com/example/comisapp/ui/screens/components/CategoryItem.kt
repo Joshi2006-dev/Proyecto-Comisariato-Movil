@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,11 +16,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.comisapp.R
 import java.util.Locale
 import java.util.Locale.getDefault
@@ -27,7 +32,7 @@ import java.util.Locale.getDefault
 @Composable
 fun CategoryItem(
     label: String,
-    imageRes: Int
+    imageRes: String
 ){
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
@@ -43,11 +48,19 @@ fun CategoryItem(
                     .background(Color.Black),
                 contentAlignment = Alignment.Center
             ){}
-            Image(
-                painter = painterResource(id = imageRes),
-                contentDescription = "Logo",
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageRes)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = label,
+                contentScale = ContentScale.Fit,
+                onLoading = {
+                },
                 modifier = Modifier
-                    .size(90.dp).rotate(5f).offset(y = -(5).dp)
+                    .size(95.dp)
+                    .rotate(5f)
+                    .offset(y = (-2).dp)
             )
         }
         Text(text = label.uppercase(getDefault()),style = MaterialTheme.typography.bodySmall.copy(

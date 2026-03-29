@@ -1,7 +1,5 @@
 package com.example.comisapp.ui.screens.auth
 
-
-
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
@@ -45,6 +43,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.comisapp.R
+import com.example.comisapp.data.repository.AuthRepository
 import com.example.comisapp.ui.screens.components.ButtonComponent
 import com.example.comisapp.ui.theme.BgColor
 import com.example.comisapp.ui.theme.ButtonBg
@@ -59,6 +58,7 @@ import com.example.comisapp.ui.theme.LogoBg
 import com.example.comisapp.ui.theme.TextDark
 import com.example.comisapp.ui.theme.TextGray
 import com.example.comisapp.ui.theme.TextPurple
+import kotlinx.coroutines.launch
 
 
 @RequiresApi(Build.VERSION_CODES.S)
@@ -78,9 +78,14 @@ private fun Modifier.glassBorder(): Modifier =
 
 @Composable
 fun RecoveryScreen(
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    repo: AuthRepository = remember { AuthRepository() }
 ) {
+    val scope = rememberCoroutineScope()
     var email by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errMsg by remember { mutableStateOf("") }
+    var showSuccess by remember { mutableStateOf(false) }
     var screenSize by remember { mutableStateOf(IntSize.Zero) }
 
     Box(
@@ -182,7 +187,6 @@ fun RecoveryScreen(
             ) {
                 Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 20.dp)) {
 
-                    // Correo electrónico
                     Text(
                         text = "CORREO ELECTRÓNICO",
                         color = LabelColor,
@@ -219,14 +223,39 @@ fun RecoveryScreen(
                             cursorColor = FieldFocus
                         )
                     )
+                    if (errMsg.isNotEmpty()) {
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            text = errMsg,
+                            color = Color(0xFFEF4444),
+                            fontSize = 12.sp,
+                            letterSpacing = 0.sp
+                        )
+                    }
 
                     Spacer(Modifier.height(20.dp))
 
 
 
-                    ButtonComponent(text = "ENVIAR ENLACE")
-
-
+                    ButtonComponent(text = if (isLoading) "ENVIANDO..." else "ENVIAR ENLACE",
+                        onClick = {if (email.isBlank()) {
+                            errMsg = "Ingresa tu correo electrónico"
+                            return@ButtonComponent
+                        }
+                            scope.launch {
+                                isLoading = true
+                                errMsg = ""
+                                try {
+                                    repo.forgotPassword(email)
+                                    showSuccess = true
+                                } catch (e: Exception) {
+                                    errMsg = "No se pudo enviar el correo. Verifica el email."
+                                } finally {
+                                    isLoading = false
+                                }
+                            }},
+                        isEnabled = !isLoading
+                    )
                 }
 
             }
@@ -264,6 +293,33 @@ fun RecoveryScreen(
             }
 
 
+        }
+
+        if (showSuccess) {
+            AlertDialog(
+                onDismissRequest = { onBack() },
+                title = {
+                    Text(
+                        text = "Correo enviado",
+                        color = TextDark,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Revisa tu bandeja de entrada y sigue las instrucciones para restablecer tu contraseña.",
+                        color = TextGray,
+                        fontSize = 14.sp
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { onBack() }) {
+                        Text("Aceptar", color = TextPurple, fontWeight = FontWeight.Bold)
+                    }
+                },
+                containerColor = CardBg,
+                shape = RoundedCornerShape(20.dp)
+            )
         }
     }
 }

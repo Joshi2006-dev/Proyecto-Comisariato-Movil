@@ -12,11 +12,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.comisapp.data.models.ProductModel
 import com.example.comisapp.ui.theme.TextPurple
 
 // ─────────────────────────────────────────────
@@ -61,8 +65,7 @@ data class Product(
 
 @Composable
 fun ProductCard(
-    product: Product,
-    onFavoriteToggle: (productId: Int, isFavorite: Boolean) -> Unit,
+    product: ProductModel,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -81,27 +84,30 @@ fun ProductCard(
                     .height(220.dp)
                     .padding(5.dp)
             ) {
-                Image(
-                    painter = painterResource(id = product.imageRes),
-                    contentDescription = product.name,
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(product.imagenFrontalUrl) // Aquí pasas la URL de Storage
+                        .crossfade(true) // Animación suave al aparecer
+                        .build(),
+                    contentDescription = "Imagen de ${product.nombre}",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(16.dp)),
                 )
 
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(5.dp)
-                ){
-                    FavoriteButton(
-                        isFavorite = product.isFavorite,
-                        onToggle = { newState ->
-                            onFavoriteToggle(product.id, newState)
-                        },
-                        )
-                }
+//                Box(
+//                    modifier = Modifier
+//                        .align(Alignment.TopEnd)
+//                        .padding(5.dp)
+//                ){
+//                    FavoriteButton(
+//                        isFavorite = product.isFavorite,
+//                        onToggle = { newState ->
+//                            onFavoriteToggle(product.id, newState)
+//                        },
+//                        )
+//                }
 
 
 
@@ -117,7 +123,7 @@ fun ProductCard(
             ) {
                 // Brand
                 Text(
-                    text = product.brand.uppercase(),
+                    text = product.categoria?.uppercase() ?: "",
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = TextPurple,
                         fontWeight = FontWeight.Bold,
@@ -131,7 +137,7 @@ fun ProductCard(
 
                 // Product name
                 Text(
-                    text = product.name,
+                    text = product.nombre?:"",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -143,7 +149,7 @@ fun ProductCard(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = product.price,
+                    text = product.precioContado.toString() + " L.",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Medium

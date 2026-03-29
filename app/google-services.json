@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "354733319178",
+    "project_id": "comisariato-plataform",
+    "storage_bucket": "comisariato-plataform.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:354733319178:android:c9a410b99ec5e89ad5ebf3",
+        "android_client_info": {
+          "package_name": "com.example.comisapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "354733319178-cr4b7nlh9uv3ecpe81houhjt4al9u96m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6Mj2-9TYMr862hfa9yE6uCF0Wq-9xoSc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "354733319178-cr4b7nlh9uv3ecpe81houhjt4al9u96m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

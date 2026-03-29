@@ -94,20 +94,20 @@ fun SaveScreen() {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(10){
-                        index ->
-                    ProductCard(
-                        product = Product(
-                            id = index,
-                            brand = "Sony Electronics",
-                            name = "Wireless Studio Headphones",
-                            price = "6,000.00 L.",
-                            imageRes = R.drawable.testportada,
-                            isFavorite = favoriteStates[index]
-                        ),
-                        onFavoriteToggle = { _, newState -> favoriteStates[index] = newState }
-                    )
-                }
+//                items(10){
+//                        index ->
+//                    ProductCard(
+//                        product = Product(
+//                            id = index,
+//                            brand = "Sony Electronics",
+//                            name = "Wireless Studio Headphones",
+//                            price = "6,000.00 L.",
+//                            imageRes = R.drawable.testportada,
+//                            isFavorite = favoriteStates[index]
+//                        ),
+////                        onFavoriteToggle = { _, newState -> favoriteStates[index] = newState }
+//                    )
+//                }
             }
         }
     }
