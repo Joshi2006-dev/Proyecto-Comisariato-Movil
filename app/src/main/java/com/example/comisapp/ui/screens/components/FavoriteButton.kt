@@ -104,7 +104,7 @@ fun FavoriteButton(
         },
     ) {
         Box(
-            modifier = Modifier.background(Color.White, RoundedCornerShape(2.dp)).size(70.dp)
+            modifier = Modifier.background(Color.Black, RoundedCornerShape(2.dp)).size(70.dp)
                 .padding(8.dp),
             contentAlignment = Alignment.Center
         ){

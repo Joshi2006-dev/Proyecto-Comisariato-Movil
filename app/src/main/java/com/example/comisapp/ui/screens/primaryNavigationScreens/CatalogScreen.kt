@@ -37,6 +37,7 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -52,18 +53,31 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.example.comisapp.R
+import com.example.comisapp.data.models.CategoryModel
+import com.example.comisapp.ui.screens.ViewModels.CatalogViewModel
+import com.example.comisapp.ui.screens.ViewModels.HomeViewModel
 import com.example.comisapp.ui.screens.components.Product
 import com.example.comisapp.ui.screens.components.ProductCard
 import com.example.comisapp.ui.theme.TextPurple
+import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CatalogScreen() {
+fun CatalogScreen(
+    viewModel: CatalogViewModel
+) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var searchQuery by remember { mutableStateOf("") }
     var selectedTab by remember { mutableIntStateOf(0) }
-    val categories = listOf("Todos", "Ropa", "Calzado", "Accesorios")
+
+    val categories by viewModel.categorias.collectAsState()
+    val productos = viewModel.productsFlow.collectAsLazyPagingItems()
+    val tabs = listOf(CategoryModel(id="", nombre = "Todos"))+categories
+
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -90,9 +104,14 @@ fun CatalogScreen() {
                 )
 
                 CatalogTabs(
-                    categories = categories,
+                    categories = tabs,
                     selectedTabIndex = selectedTab,
-                    onTabSelected = { selectedTab = it }
+                    onTabSelected = {
+                        index ->
+                        selectedTab = index
+                        val categoriaId = if (index == 0) null else tabs[index].id
+                        viewModel.seleccionarCategoria(categoriaId)
+                    }
                 )
             }
         }
@@ -110,19 +129,18 @@ fun CatalogScreen() {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(10){
-                        index ->
-                    ProductCard(
-                        product = Product(
-                            id = index,
-                            brand = "Sony Electronics",
-                            name = "Wireless Studio Headphones",
-                            price = "6,000.00 L.",
-                            imageRes = R.drawable.testportada,
-                            isFavorite = favoriteStates[index]
-                        ),
-                        onFavoriteToggle = { _, newState -> favoriteStates[index] = newState }
-                    )
+                items(
+                    count = productos.itemCount,
+                    key = productos.itemKey { it.id }
+                ){
+                    index ->
+                    val producto = productos[index]
+                    producto?.let{
+                        ProductCard(
+                            product = it,
+                        )
+                    }
+
                 }
             }
         }
@@ -184,7 +202,7 @@ fun SearchAndFilterBar(query: String, onQueryChange: (String) -> Unit) {
 
 @Composable
 fun CatalogTabs(
-    categories: List<String>,
+    categories: List<CategoryModel>,
     selectedTabIndex: Int,
     onTabSelected: (Int) -> Unit
 ) {
@@ -205,13 +223,13 @@ fun CatalogTabs(
             }
         }
     ) {
-        categories.forEachIndexed { index, title ->
+        categories.forEachIndexed { index, categoria ->
             Tab(
                 selected = selectedTabIndex == index,
                 onClick = { onTabSelected(index) },
                 text = {
                     Text(
-                        text = title,
+                        text = categoria.nombre,
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Medium,
                             color = if (selectedTabIndex == index) TextPurple else Color.Gray

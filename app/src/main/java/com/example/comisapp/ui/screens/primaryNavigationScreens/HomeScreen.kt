@@ -77,8 +77,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.example.comisapp.R
+import com.example.comisapp.ui.screens.ViewModels.HomeViewModel
 import com.example.comisapp.ui.screens.components.CategoryItem
 import com.example.comisapp.ui.screens.components.FavoriteButton
 import com.example.comisapp.ui.screens.components.Product
@@ -103,104 +106,122 @@ data class ProfileMenuItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    externalPadding: PaddingValues = PaddingValues(0.dp),
+    viewModel: HomeViewModel,
     onNavigateToCuenta: ()->Unit = {},
-    onNavigateToCentroAyuda: ()->Unit = {},
-    onNavigateToSugerencias: ()->Unit = {},
     onLogOut: ()-> Unit = {},
     onNotificationsClick: () -> Unit = {},
     profileImageUrl: String? = null,
 ){
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
+    val categoriasItems = viewModel.categoriesFlow.collectAsLazyPagingItems()
+    val productosItems = viewModel.productsFlow.collectAsLazyPagingItems()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    val drawerMenuItems = listOf(
-        DrawerMenuItem(
-            icon = ImageVector.vectorResource(R.drawable.ic_profile),
-            label = "Cuenta",
-            onClick = {
-                scope.launch {
-                    drawerState.close()
-                    onNavigateToCuenta()
-                }
-            }
-        ) ,
-        DrawerMenuItem(
-            icon = ImageVector.vectorResource(R.drawable.ic_support),
-            label = "Centro de Ayuda",
-            onClick = {
-                scope.launch {
-                    drawerState.close()
-                    onNavigateToCentroAyuda()
-                }
-            }
-        ),
-        DrawerMenuItem(
-            icon = ImageVector.vectorResource(R.drawable.ic_ideas),
-            label = "Segurencias",
-            onClick = {
-                scope.launch {
-                    drawerState.close()
-                    onNavigateToSugerencias()
-                }
-            }
-        ),
-        DrawerMenuItem(
-            icon = ImageVector.vectorResource(R.drawable.ic_logout),
-            label = "Cerrar Sesion",
-            onClick = {
-                scope.launch {
-                    drawerState.close()
-                    onNavigateToCentroAyuda()
-                }
-            }
-        )
-    )
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            AppSidebarContent(
-                items = drawerMenuItems,
-                onClose = { scope.launch { drawerState.close() } },
-                profileImageUrl = profileImageUrl
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            AppHeader(
+                profileImageUrl = profileImageUrl,
+                onNavigateToCuenta = onNavigateToCuenta,
+                onCerrarSesion = onLogOut,
+                scrollBehavior = scrollBehavior,
+                onNotificationsClick = onNotificationsClick
             )
-        }
-    ) {
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                AppHeader(
-                    profileImageUrl = profileImageUrl,
-                    onMenuClick = { scope.launch { drawerState.open() } },
-                    onNavigateToCuenta = onNavigateToCuenta,
-                    onCerrarSesion = onLogOut,
-                    scrollBehavior = scrollBehavior,
-                    onNotificationsClick = onNotificationsClick
-                )
-            },
+        },
 
         ){ paddingValues ->
-            val favoriteStates = remember { mutableStateListOf(*Array(10) { false }) }
+//            val favoriteStates = remember { mutableStateListOf(*Array(10) { false }) }
 
-            Column(
-                modifier = Modifier.padding(paddingValues).fillMaxSize().background(Color.White)
+        Column(
+            modifier = Modifier.padding(paddingValues).fillMaxSize().background(Color.White)
 
+        ){
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(8.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                modifier = Modifier.padding(bottom = 60.dp  )
             ){
+                item(span = {GridItemSpan(2)}) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = "QUIZAS PODRÍA INTERESARTE",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 11.sp,
+                                letterSpacing = 1.1.sp,
+                                color = Color(0xFF474747)
+                            ),
+                        )
+                        Spacer(modifier = Modifier.height(5.dp))
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.White
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                        ){
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(300.dp)
+                                    .padding(5.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(R.drawable.img_mas_destacado),
+                                    contentDescription = "destacado",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(8.dp))
+                                )
 
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(3.dp),
-                    horizontalArrangement = Arrangement.spacedBy(3.dp)
-                ){
-                    item(span = {GridItemSpan(2)}) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Spacer(modifier = Modifier.height(10.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomStart)
+                                        .padding(25.dp)
+                                ){
+                                    Column(
+                                    ) {
+                                        Text(
+                                            text = "Lo Más \nDestacado",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                color = Color.White,
+                                                fontSize = 36.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                lineHeight = 40.sp,
+                                                letterSpacing = -1.8.sp
+                                            ),
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "Conoce lo productos mas solicitados por nuestros usuarios",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                color = Color.White.copy(alpha = 0.6f),
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Normal,
+                                                lineHeight = 20.sp,
+                                                letterSpacing = 0.sp
+                                            ),
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+
+                                    }
+
+                                }
+
+                            }
+                            Spacer(modifier = Modifier.height(25.dp))
                             Text(
-                                text = "QUIZAS PODRÍA INTERESARTE",
+                                text = "CATEGORÍAS SUGERIDAS",
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 11.sp,
@@ -208,132 +229,58 @@ fun HomeScreen(
                                     color = Color(0xFF474747)
                                 ),
                             )
-                            Spacer(modifier = Modifier.height(5.dp))
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(16.dp),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = Color.White
-                                    ),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                                ){
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(300.dp)
-                                            .padding(5.dp)
-                                    ) {
-                                        Image(
-                                            painter = painterResource(R.drawable.img_mas_destacado),
-                                            contentDescription = "destacado",
-                                            contentScale = ContentScale.Crop,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clip(RoundedCornerShape(8.dp))
-                                        )
+                            Spacer(modifier = Modifier.height(15.dp))
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(15.dp)
 
-                                        Box(
-                                            modifier = Modifier
-                                                .align(Alignment.BottomStart)
-                                                .padding(25.dp)
-                                        ){
-                                            Column(
-                                            ) {
-                                                Text(
-                                                    text = "Lo Más \nDestacado",
-                                                    style = MaterialTheme.typography.labelSmall.copy(
-                                                        color = Color.White,
-                                                        fontSize = 36.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        lineHeight = 40.sp,
-                                                        letterSpacing = -1.8.sp
-                                                    ),
-                                                    maxLines = 2,
-                                                    overflow = TextOverflow.Ellipsis
-                                                )
-                                                Spacer(modifier = Modifier.height(4.dp))
-                                                Text(
-                                                    text = "Conoce lo productos mas solicitados por nuestros usuarios",
-                                                    style = MaterialTheme.typography.labelSmall.copy(
-                                                        color = Color.White.copy(alpha = 0.6f),
-                                                        fontSize = 14.sp,
-                                                        fontWeight = FontWeight.Normal,
-                                                        lineHeight = 20.sp,
-                                                        letterSpacing = 0.sp
-                                                    ),
-                                                    maxLines = 2,
-                                                    overflow = TextOverflow.Ellipsis
-                                                )
-
-                                            }
-
-                                        }
-
-                                    }
-                                Spacer(modifier = Modifier.height(25.dp))
-                                Text(
-                                    text = "CATEGORÍAS SUGERIDAS",
-                                    style = MaterialTheme.typography.titleLarge.copy(
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 11.sp,
-                                        letterSpacing = 1.1.sp,
-                                        color = Color(0xFF474747)
-                                    ),
-                                )
-                                Spacer(modifier = Modifier.height(15.dp))
-                                LazyRow(
-                                    horizontalArrangement = Arrangement.spacedBy(15.dp)
-
-                                ) {
-                                    items(10){
-                                        index ->
+                            ) {
+                                items(
+                                    count = categoriasItems.itemCount,
+                                    key = categoriasItems.itemKey { it.id }
+                                ){ index ->
+                                    val categoria = categoriasItems[index]
+                                    categoria.let {
                                         CategoryItem(
-                                            imageRes = R.drawable.login_lock_img,
-                                            label = "Seguridad"
+                                            imageRes = it?.imagenUrl ?: "",
+                                            label = it?.nombre ?: ""
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(25.dp))
-                                Text(text = "Recomendaciones para ti",style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = -(0.6).sp,
-                                    fontSize = 24.sp
-                                    )
-                                )
-                                Spacer(modifier = Modifier.height(10.dp))
-                                HorizontalDivider(thickness = 0.5.dp, color = CardBorderColor.copy(alpha = 0.2f))
-                                Spacer(modifier = Modifier.height(10.dp))
-
                             }
-                        }
+                            Spacer(modifier = Modifier.height(25.dp))
+                            Text(text = "Recomendaciones para ti",style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = -(0.6).sp,
+                                fontSize = 24.sp
+                            )
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            HorizontalDivider(thickness = 0.5.dp, color = CardBorderColor.copy(alpha = 0.2f))
+                            Spacer(modifier = Modifier.height(10.dp))
 
-                    }
-                    items(10){
-                        index ->
-                        ProductCard(
-                            product = Product(
-                                id = index,
-                                brand = "Sony Electronics",
-                                name = "Wireless Studio Headphones",
-                                price = "6,000.00 L.",
-                                imageRes = R.drawable.testportada,
-                                isFavorite = favoriteStates[index]
-                            ),
-                            onFavoriteToggle = { _, newState -> favoriteStates[index] = newState }
-                        )
-                    }
-                    item {
-                        Spacer(modifier = Modifier.height(60.dp))
+                        }
                     }
 
                 }
-
-
+                items(
+                    count = productosItems.itemCount,
+                    key = productosItems.itemKey { it.id }
+                ){
+                    index ->
+                    val producto = productosItems[index]
+                    producto?.let {
+                        ProductCard(
+                            product = it
+                        )
+                    }
+                }
             }
 
 
         }
+
+
     }
 
 
@@ -476,7 +423,6 @@ fun AppSidebarContent(
 fun AppHeader(
     scrollBehavior: TopAppBarScrollBehavior,
     profileImageUrl: String? = null,
-    onMenuClick: () -> Unit = {},
     onNavigateToCuenta: () -> Unit = {},
     onCerrarSesion: () -> Unit = {},
     onNotificationsClick: () -> Unit = {}
@@ -488,15 +434,6 @@ fun AppHeader(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.White
         ),
-        navigationIcon = {
-            IconButton(onClick = onMenuClick) {
-                Icon(
-                    imageVector = Icons.Filled.Menu,
-                    contentDescription = "Abrir menú",
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        },
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically

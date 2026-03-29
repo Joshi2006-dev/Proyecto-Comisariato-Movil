@@ -3,6 +3,7 @@ package com.example.comisapp.ui.screens.secondaryNavigationScreens
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -24,9 +25,13 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.comisapp.R
 
 
 val TextDarkBlue = Color(0xFF1A2B48)
@@ -38,7 +43,8 @@ val BorderGray = Color(0xFFE2E8F0)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    nav: NavController
 ) {
     Scaffold(
         containerColor = LightGrayBg,
@@ -72,7 +78,7 @@ fun AccountScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp) // Espaciado lateral exacto
+                .padding(horizontal = 20.dp)
         ) {
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -91,6 +97,10 @@ fun AccountScreen(
             ContactInfoSection()
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            AccountSettingSection(nav = nav)
+            Spacer(modifier = Modifier.height(24.dp))
+
         }
     }
 }
@@ -346,6 +356,65 @@ fun ContactInfoSection() {
     }
 }
 
+
+
+@Composable
+fun AccountSettingSection(
+    nav: NavController
+) {
+    Column {
+        Text(
+            text = "OPCIONES DE CUENTA",
+            fontSize = 13.sp,
+            color = Color.Gray,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 4.dp)
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, BorderGray, RoundedCornerShape(16.dp)),
+            elevation = CardDefaults.cardElevation(0.dp)
+        ) {
+            Column() {
+                SettingsRow(
+                    icon = ImageVector.vectorResource(R.drawable.ic_ideas),
+                    label = "Sugerencias",
+                    onClick = {
+                        nav.navigate("sugerencias")
+                    }
+                )
+
+                HorizontalDivider(thickness = 0.5.dp, color = BorderGray)
+
+                SettingsRow(
+                    icon = ImageVector.vectorResource(R.drawable.ic_support),
+                    label = "Centro de Ayuda",
+                    onClick = {
+                        nav.navigate("productDetail")
+                    }
+                )
+
+                HorizontalDivider(thickness = 0.5.dp, color = BorderGray)
+
+                SettingsRow(
+                    icon = ImageVector.vectorResource(R.drawable.ic_support),
+                    label = "Cambiar Contraseña",
+                    onClick = {
+                        nav.navigate("changePassword")
+                    }
+                )
+
+            }
+        }
+    }
+}
+
 @Composable
 fun InfoRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -418,6 +487,44 @@ fun ContactRow(
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
                 color = TextDarkBlue
+            )
+        }
+    }
+}
+
+
+@Composable
+fun SettingsRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit = {}
+) {
+    Row(
+        modifier = Modifier.clickable(enabled = true, onClick = {onClick()}).fillMaxWidth().padding(horizontal = 20.dp).height(80.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .background(Color(0xFFF5F3FF), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = CustomPurple,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column {
+            Text(
+                text = label,
+                fontSize = 16.sp,
+                color = Color.Black,
+                fontWeight = FontWeight.Normal
             )
         }
     }
