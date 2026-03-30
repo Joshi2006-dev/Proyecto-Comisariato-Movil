@@ -21,10 +21,12 @@ import androidx.navigation.NavHostController
 import com.example.comisapp.data.models.CategoryModel
 import com.example.comisapp.data.repository.AuthRepository
 import com.example.comisapp.data.repository.CategoryRepository
+import com.example.comisapp.data.repository.CreditRepository
 import com.example.comisapp.data.repository.ProductRepository
 import com.example.comisapp.ui.navigation.BottomBarScreen
 import com.example.comisapp.ui.navigation.CustomBottomBar
 import com.example.comisapp.ui.screens.ViewModels.CatalogViewModel
+import com.example.comisapp.ui.screens.ViewModels.CreditViewModel
 import com.example.comisapp.ui.screens.ViewModels.HomeViewModel
 import com.example.comisapp.ui.screens.primaryNavigationScreens.CatalogScreen
 import com.example.comisapp.ui.screens.primaryNavigationScreens.CreditScreen
@@ -32,10 +34,15 @@ import com.example.comisapp.ui.screens.primaryNavigationScreens.HomeScreen
 import com.example.comisapp.ui.screens.primaryNavigationScreens.SaveScreen
 import kotlinx.coroutines.launch
 
+
+
+
+
 @Composable
 fun MainScreen(
     navController: NavHostController,
     authRepo: AuthRepository,
+    initialPage: Int = 0
 ) {
     val screens = listOf(
         BottomBarScreen.Home,
@@ -44,23 +51,24 @@ fun MainScreen(
         BottomBarScreen.Guardados
     )
 
+    val repoCredit = CreditRepository()
+    val categoryRepo =  CategoryRepository()
+    val productRepo =  ProductRepository()
+    val factoryHome =  HomeViewModel.Factory(categoryRepo,productRepo)
+    val factoryCatalog =  CatalogViewModel.Factory(categoryRepo,productRepo)
+    val factoryCredit =  CreditViewModel.Factory(repoCredit)
 
-
-    val auth by remember { mutableStateOf(authRepo) }
-    val categoryRepo = remember { CategoryRepository() }
-    val productRepo = remember { ProductRepository() }
-    val factoryHome = remember{
-        HomeViewModel.Factory(categoryRepo,productRepo)
-    }
-
-    val factoryCatalog = remember{
-        CatalogViewModel.Factory(categoryRepo,productRepo)
-    }
-
+    val creditViewModel: CreditViewModel = viewModel(factory = factoryCredit)
     val catalogViewModel: CatalogViewModel = viewModel(factory = factoryCatalog)
     val homeViewModel: HomeViewModel = viewModel(factory = factoryHome)
 
-    val pagerState = rememberPagerState(pageCount = { screens.size })
+    val auth by remember { mutableStateOf(authRepo) }
+
+
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        pageCount = { screens.size }
+    )
     val scope = rememberCoroutineScope()
 
     Scaffold(
@@ -101,6 +109,9 @@ fun MainScreen(
                                     inclusive = true
                                 }
                             }
+                        },
+                        onGoDetail = {
+                            navController.navigate("productDetail/$it")
                         }
                     )
                 1 ->
@@ -111,7 +122,8 @@ fun MainScreen(
                     CreditScreen(
                         onOpenDetail = {
                             navController.navigate("detalleCredito")
-                        }
+                        },
+                        creditViewModel
                     )
 
                 3 ->

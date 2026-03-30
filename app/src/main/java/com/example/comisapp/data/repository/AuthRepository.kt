@@ -19,6 +19,10 @@ class AuthRepository {
     //Logout
     fun logout() { auth.signOut() }
 
+    fun currentUser(): String{
+        return auth.currentUser?.uid ?: ""
+    }
+
     fun islogged(): Boolean { return auth.currentUser != null }
 
     suspend fun forgotPassword(email: String) {

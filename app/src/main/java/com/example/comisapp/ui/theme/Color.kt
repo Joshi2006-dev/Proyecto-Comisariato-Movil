@@ -25,3 +25,6 @@ val ButtonBg        = Color(0xFF111111)
 val LogoBg          = Color(0xFF1A1A2E)
 
 val AppBg           = Color(0xFFF8F9FF)
+
+val ApbGreen = Color(0xFF047857)
+val RpbRed = Color(0xFFBE123C)

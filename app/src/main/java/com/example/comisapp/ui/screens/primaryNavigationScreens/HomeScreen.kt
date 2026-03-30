@@ -107,6 +107,7 @@ data class ProfileMenuItem(
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
+    onGoDetail: (String) -> Unit,
     onNavigateToCuenta: ()->Unit = {},
     onLogOut: ()-> Unit = {},
     onNotificationsClick: () -> Unit = {},
@@ -271,7 +272,8 @@ fun HomeScreen(
                     val producto = productosItems[index]
                     producto?.let {
                         ProductCard(
-                            product = it
+                            product = it,
+                            onGoDetail = onGoDetail
                         )
                     }
                 }

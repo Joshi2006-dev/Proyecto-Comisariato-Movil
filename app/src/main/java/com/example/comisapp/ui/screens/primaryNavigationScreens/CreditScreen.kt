@@ -50,18 +50,23 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.example.comisapp.R
 import com.example.comisapp.ui.screens.components.CreditProgressCard
 import com.example.comisapp.ui.screens.components.Product
 import com.example.comisapp.ui.screens.components.ProductCard
 import com.example.comisapp.ui.theme.TextPurple
-
+import com.example.comisapp.ui.screens.ViewModels.CreditViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreditScreen(
-    onOpenDetail: () -> Unit = {}
+    onOpenDetail: () -> Unit = {},
+    viewModel: CreditViewModel
 ) {
+
+    val creditItems = viewModel.creditsFlow.collectAsLazyPagingItems()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var searchQuery by remember { mutableStateOf("") }
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -112,18 +117,19 @@ fun CreditScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(5){
+                items(
+                    count = creditItems.itemCount,
+                    key = creditItems.itemKey { it.id }
+                ){
                     index ->
-                    CreditProgressCard(
-                        title = "Essential Leather Tote",
-                        date = "12 Oct 2023",
-                        currentInstallment = 5,
-                        totalInstallments = 6,
-                        imageRes = R.drawable.testportada,
-                        onDetailClick = {
-                            onOpenDetail()
-                        }
-                    )
+                    val credit = creditItems[index]
+                    credit?.let {
+                        CreditProgressCard(
+                            credito = it,
+                            onDetailClick = {}
+                        )
+                    }
+
                 }
             }
 
