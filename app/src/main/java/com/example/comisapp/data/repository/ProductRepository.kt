@@ -3,8 +3,9 @@ package com.example.comisapp.data.repository
 import android.util.Log
 import com.example.comisapp.data.models.CategoryModel
 import com.example.comisapp.data.models.ProductModel
-import com.example.comisapp.data.models.settings.FavoriteModel
+import com.example.comisapp.data.models.FavoriteModel
 import com.google.firebase.Firebase
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
@@ -76,7 +77,7 @@ class ProductRepository {
                 FavoriteModel(
                     uid = userId,
                     marcado = true,
-                    fechaGuardado = com.google.firebase.Timestamp.now()
+                    fechaGuardado = Timestamp.now()
                 )
             )
             .await()

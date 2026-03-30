@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.comisapp.data.models.ProductModel
+import com.example.comisapp.data.models.settings.PlazoModel
 import com.example.comisapp.ui.screens.ViewModels.CreditRequestState
 import com.example.comisapp.ui.screens.ViewModels.ProductDetailState
 import com.example.comisapp.ui.screens.ViewModels.ProductDetailViewModel
@@ -97,69 +98,6 @@ fun ProductDetailScreen(
 ) {
     val state = viewModel.uiState
 
-
-    // ── Reviews sheet ──────────────────────────────────────────────────────────
-    val reviewsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var showReviewsSheet by remember { mutableStateOf(false) }
-    var reviewInput by remember { mutableStateOf("") }
-
-    // ── Payment bottom sheet ───────────────────────────────────────────────────
-//    if (showPaymentSheet) {
-//        ModalBottomSheet(
-//            onDismissRequest = { showPaymentSheet = false },
-//            sheetState = paymentSheetState,
-//            containerColor = Color.White,
-//            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-//        ) {
-//            PaymentBottomSheetContent(
-//                product = product,
-//                paymentMode = paymentMode,
-//                onPaymentModeChange = { paymentMode = it },
-//                quantity = quantity,
-//                onQuantityChange = { quantity = it.coerceAtLeast(1) },
-//                selectedMonths = selectedMonths,
-//                onMonthsChange = { selectedMonths = it },
-//                monthsMenuExpanded = monthsMenuExpanded,
-//                onMonthsMenuExpandedChange = { monthsMenuExpanded = it },
-//                totalPrice = totalPrice,
-//                monthlyPayment = monthlyPayment,
-//                onConfirm = {
-//                    coroutineScope.launch {
-//                        paymentSheetState.hide()
-//                        showPaymentSheet = false
-//                    }
-//                }
-//            )
-//        }
-//    }
-
-    // ── Reviews bottom sheet ───────────────────────────────────────────────────
-//    if (showReviewsSheet) {
-//        ModalBottomSheet(
-//            onDismissRequest = { showReviewsSheet = false },
-//            sheetState = reviewsSheetState,
-//            containerColor = Color.White,
-//            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-//            dragHandle = null                      // we draw our own header with X
-//        ) {
-//            ReviewsBottomSheetContent(
-//                product = product,
-//                reviewInput = reviewInput,
-//                onReviewInputChange = { reviewInput = it },
-//                onClose = {
-//                    coroutineScope.launch {
-//                        reviewsSheetState.hide()
-//                        showReviewsSheet = false
-//                    }
-//                },
-//                onSendReview = {
-//                    // TODO: handle send
-//                    reviewInput = ""
-//                }
-//            )
-//        }
-//    }
-
     when(state){
         is  ProductDetailState.Loading-> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -188,8 +126,9 @@ private fun MainContent(
    onNavigateToCredits: () -> Unit = {}
 ){
     val scrollState = rememberScrollState()
-    val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val plazos = viewModel.plazos
+    val garantia = viewModel.garantia
 
     val galleryImages = remember(product){
         listOfNotNull(
@@ -208,7 +147,9 @@ private fun MainContent(
     var showPaymentSheet by remember { mutableStateOf(false) }
     var paymentMode by remember { mutableStateOf(PaymentMode.SINGLE) }
     var quantity by remember { mutableIntStateOf(1) }
-    var selectedMonths by remember { mutableIntStateOf(3) }
+    var selectedMonths by remember {
+        mutableIntStateOf(plazos.firstOrNull()?.plazoMeses?:1)
+    }
     var monthsMenuExpanded by remember { mutableStateOf(false) }
 
     val precio = if (paymentMode== PaymentMode.SINGLE){
@@ -267,6 +208,7 @@ private fun MainContent(
                 totalPrice = totalPrice,
                 monthlyPayment = monthlyPayment,
                 isLoading = creditState is CreditRequestState.Loading,
+                plazos = plazos,
                 onConfirm = {
                     viewModel.requestCredit(
                         product=product,
@@ -349,7 +291,9 @@ private fun MainContent(
             }
 
 
-            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)) {
                 Text(
                     product.categoria?:"".uppercase(),
                     color = BrandPurple, fontSize = 12.sp,
@@ -363,7 +307,9 @@ private fun MainContent(
 
             Spacer(Modifier.height(16.dp))
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -393,7 +339,9 @@ private fun MainContent(
             HorizontalDivider(color = DividerColor)
 
             // Description
-            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)) {
                 Text("Descripción", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = BodyText)
                 Spacer(Modifier.height(8.dp))
                 Text(product.descripcion?:"", fontSize = 14.sp, color = SubtleText, lineHeight = 22.sp)
@@ -402,20 +350,32 @@ private fun MainContent(
             HorizontalDivider(color = DividerColor)
             Spacer(Modifier.height(8.dp))
 
-            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)) {
                 Text(
                     "POLÍTICA DE GARANTÍA", fontSize = 12.sp,
                     fontWeight = FontWeight.Bold, letterSpacing = 1.sp, color = BodyText
                 )
                 Spacer(Modifier.height(10.dp))
-                Text("Para agilizar tu proceso, ingresa a nuestra App y dirígete al apartado de \"Garantías o Reclamos\" que se encuentra en el detalle de tu crédito. Desde allí podrás enviar tu solicitud, adjuntar fotos de la falla y recibir una respuesta técnica en un plazo de 7 días hábiles.", fontSize = 14.sp, color = SubtleText, lineHeight = 22.sp)
+                Text("Comisariato Cucayagua garantiza la calidad de sus " +
+                        "productos por un periodo de ${product.garantiaMeses} mes(es) " +
+                        "contra defectos de fábrica",
+                    fontSize = 14.sp, color = SubtleText, lineHeight = 22.sp)
                 Spacer(Modifier.height(10.dp))
-                BulletSection("Cobertura:", "Fallas técnicas y materiales bajo uso normal.")
-                Spacer(Modifier.height(6.dp))
-                BulletSection("Exclusiones:", "Daños por maltrato, accidentes, humedad, variaciones de voltaje o modificaciones no autorizadas.")
-                Spacer(Modifier.height(6.dp))
-                BulletSection("Requisito:", "Conservar el comprobante de compra digital o físico.\"\n")
-                Spacer(Modifier.height(14.dp))
+
+                if(garantia?.cobertura?.isNotBlank() == true){
+                    BulletSection("Cobertura:", garantia.cobertura)
+                    Spacer(Modifier.height(6.dp))
+                }
+                if(garantia?.exclusiones?.isNotBlank() == true){
+                    BulletSection("Exclusiones:", garantia.exclusiones)
+                    Spacer(Modifier.height(6.dp))
+                }
+                if(garantia?.requisito?.isNotBlank() == true){
+                    BulletSection("Requisito:", garantia.requisito)
+                    Spacer(Modifier.height(6.dp))
+                }
                 Text("¿Cómo solicitar tu garantía?", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = BodyText)
                 Spacer(Modifier.height(6.dp))
                 Text(
@@ -440,25 +400,6 @@ private fun MainContent(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Reseñas", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = BodyText)
-
-//                Row(
-//                    verticalAlignment = Alignment.CenterVertically,
-//                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-//                ) {
-//                    repeat(5) { i ->
-//                        Icon(
-//                            imageVector = Icons.Filled.Star,
-//                            contentDescription = null,
-//                            tint = if (i < product.rating.toInt()) StarYellow else DividerColor,
-//                            modifier = Modifier.size(18.dp)
-//                        )
-//                    }
-//                    Spacer(Modifier.width(4.dp))
-//                    Text(
-//                        "${product.rating} / 5.0 (${product.reviewCount})",
-//                        fontSize = 13.sp, color = SubtleText
-//                    )
-//                }
             }
 
             Spacer(Modifier.height(8.dp))
@@ -468,7 +409,6 @@ private fun MainContent(
 
 }
 
-// ─── Reviews Bottom Sheet ─────────────────────────────────────────────────────
 @Composable
 private fun ReviewsBottomSheetContent(
     product: ProductDetail,
@@ -480,9 +420,8 @@ private fun ReviewsBottomSheetContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.85f)        // takes 85% of screen height
+            .fillMaxHeight(0.85f)
     ) {
-        // ── Header ─────────────────────────────────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -694,6 +633,7 @@ private fun PaymentBottomSheetContent(
     paymentMode: PaymentMode,
     onPaymentModeChange: (PaymentMode) -> Unit,
     quantity: Int,
+    plazos: List<PlazoModel>,
     onQuantityChange: (Int) -> Unit,
     selectedMonths: Int,
     onMonthsChange: (Int) -> Unit,
@@ -704,7 +644,6 @@ private fun PaymentBottomSheetContent(
     isLoading: Boolean,
     onConfirm: () -> Unit
 ) {
-    val financingMonths = listOf(3, 6, 12, 18, 24)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -726,34 +665,54 @@ private fun PaymentBottomSheetContent(
             )
             Spacer(Modifier.height(8.dp))
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .border(1.dp, DividerColor, RoundedCornerShape(10.dp))
-                    .clickable { onMonthsMenuExpandedChange(true) }
-                    .padding(horizontal = 14.dp, vertical = 14.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+            if (plazos.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("$selectedMonths meses", fontSize = 14.sp, color = BodyText)
-                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = SubtleText)
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = BrandPurple,
+                        strokeWidth = 2.dp
+                    )
                 }
-                DropdownMenu(
-                    expanded = monthsMenuExpanded,
-                    onDismissRequest = { onMonthsMenuExpandedChange(false) }
+            }else{
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .border(1.dp, DividerColor, RoundedCornerShape(10.dp))
+                        .clickable { onMonthsMenuExpandedChange(true) }
+                        .padding(horizontal = 14.dp, vertical = 14.dp)
                 ) {
-                    financingMonths.forEach { months ->
-                        DropdownMenuItem(
-                            text = { Text("$months meses") },
-                            onClick = { onMonthsChange(months); onMonthsMenuExpandedChange(false) }
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("$selectedMonths meses", fontSize = 14.sp, color = BodyText)
+                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = SubtleText)
+                    }
+                    DropdownMenu(
+                        expanded = monthsMenuExpanded,
+                        onDismissRequest = { onMonthsMenuExpandedChange(false) }
+                    ) {
+                        plazos.sortedBy { it.plazoMeses }.forEach { plazo ->
+                            DropdownMenuItem(
+                                text = { Text("${plazo.plazoMeses} meses") },
+                                onClick = {
+                                    onMonthsChange(plazo.plazoMeses)
+                                    onMonthsMenuExpandedChange(false)
+                                }
+                            )
+                        }
                     }
                 }
             }
+
+
             Spacer(Modifier.height(20.dp))
         }
 
@@ -842,7 +801,9 @@ private fun PaymentBottomSheetContent(
         ) {
             Icon(
                 Icons.Default.Info, contentDescription = null,
-                tint = InfoBlueIcon, modifier = Modifier.size(18.dp).padding(top = 1.dp)
+                tint = InfoBlueIcon, modifier = Modifier
+                    .size(18.dp)
+                    .padding(top = 1.dp)
             )
             Text(
                 text = if (paymentMode == PaymentMode.INSTALLMENTS)

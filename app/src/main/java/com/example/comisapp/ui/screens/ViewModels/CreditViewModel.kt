@@ -15,7 +15,10 @@ import com.example.comisapp.data.repository.ProductRepository
 import com.example.comisapp.ui.PaginationSource.CategoryPaginationSource
 import com.example.comisapp.ui.PaginationSource.CreditPagination
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 
 class CreditViewModel(
     repoCredit: CreditRepository,
@@ -31,6 +34,9 @@ class CreditViewModel(
             }
         }
     }
+
+    private val refreshTrigger = MutableStateFlow(0)
+
     private val currentUserId:String?
         get() = FirebaseAuth.getInstance().currentUser?.uid
 
@@ -43,8 +49,11 @@ class CreditViewModel(
             initialLoadSize = 6,
         ),
         pagingSourceFactory = {
-            CreditPagination(repoCredit,currentUserId?:"")
+            CreditPagination(repoCredit, currentUserId ?: "")
         }
-    ).flow
-        .cachedIn(viewModelScope)
+    ).flow.cachedIn(viewModelScope)
+
+    fun refresh() {
+        refreshTrigger.value++
+    }
 }
