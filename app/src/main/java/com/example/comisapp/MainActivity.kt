@@ -41,6 +41,9 @@ import com.example.comisapp.ui.screens.ViewModels.ProductDetailViewModel
 import com.example.comisapp.ui.screens.auth.AuthViewModel
 import com.example.comisapp.ui.screens.auth.ChangePasswordScreen
 import com.example.comisapp.ui.screens.sampleProduct
+import com.example.comisapp.data.repository.SuggestionRepository
+
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,6 +60,7 @@ class MainActivity : ComponentActivity() {
                 val creditRepo = remember { CreditRepository() }
 
 
+                val suggestionRepo = remember { SuggestionRepository() }
 
                 NavHost(
                     navController = nav,

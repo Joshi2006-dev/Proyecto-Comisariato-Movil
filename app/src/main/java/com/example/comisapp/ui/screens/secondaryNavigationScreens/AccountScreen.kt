@@ -396,7 +396,7 @@ fun AccountSettingSection(
                     icon = ImageVector.vectorResource(R.drawable.ic_support),
                     label = "Centro de Ayuda",
                     onClick = {
-                        nav.navigate("productDetail")
+                        nav.navigate("helpCenter")
                     }
                 )
 

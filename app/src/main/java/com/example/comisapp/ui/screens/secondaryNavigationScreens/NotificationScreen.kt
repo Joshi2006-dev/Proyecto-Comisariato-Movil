@@ -10,20 +10,50 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.comisapp.data.repository.NotificationRepository
+import com.example.comisapp.ui.screens.ViewModels.NotificationViewModel
+import java.util.Calendar
+import androidx.compose.foundation.lazy.items
+import com.example.comisapp.data.models.NotificationModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    viewModel: NotificationViewModel = viewModel(
+        factory = NotificationViewModel.Factory(NotificationRepository())
+    )
 ) {
+    val notificaciones by viewModel.notificaciones.collectAsState()
+
+    val hoy = Calendar.getInstance().apply{
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set (Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.time
+
+    val recientes= notificaciones.filter { notif->
+        val fecha = notif.fechaEnvioNotificacion?.toDate()
+        fecha != null && fecha.after(hoy)
+    }
+    val anteriores = notificaciones.filter { notif->
+        val fecha = notif.fechaEnvioNotificacion?.toDate()
+        fecha== null || !fecha.after(hoy)
+    }
+
 
     Scaffold(
 
@@ -51,13 +81,22 @@ fun NotificationScreen(
                     }
 
                 },
-
+                actions = {
+                    // Botón marcar todas como leídas
+                    if (notificaciones.any { !it.leido }) {
+                        TextButton(onClick = { viewModel.marcarTodasComoLeidas() }) {
+                            Text(
+                                text = "Leer todas",
+                                fontSize = 12.sp,
+                                color = Color(0xFF673AB7)
+                            )
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White
                 )
-
             )
-
         }
 
     ) { paddingValues ->
@@ -74,48 +113,64 @@ fun NotificationScreen(
                 SupportCard()
             }
 
-            item {
-                Spacer(modifier = Modifier.height(20.dp))
-                SectionTitle("RECIENTES")
+            if(notificaciones.isEmpty()){
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 60.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.NotificationsNone,
+                                contentDescription = null,
+                                tint = Color(0xFF9CA3AF),
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "No hay notificaciones",
+                                color = Color(0xFF9CA3AF),
+                                fontSize = 15.sp
+                            )
+                        }
+
+                    }
+                }
             }
 
-            item {
-                NotificationCard(
-                    title = "Solicitud Aprobada",
-                    message = "Tu solicitud de Essential Leather Tote ha sido aprobada, ve a la sección de créditos para consultar más información.",
-                    time = "hace 2 min",
-                    approved = true
-                )
+            // Sección RECIENTES
+            if (recientes.isNotEmpty()) {
+                item {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    SectionTitle("RECIENTES")
+                }
+                items(recientes) { notif ->
+                    NotificationCard(
+                        notif = notif,
+                        onTap = { viewModel.marcarComoLeida(notif.notificacionId) }
+                    )
+                }
             }
 
-            item {
-                NotificationCard(
-                    title = "Solicitud Rechazada",
-                    message = "Tu solicitud de iPhone 16 Pro Max ha sido rechazada: No cumples con los requisitos mínimos para optar a este crédito.",
-                    time = "hace 1 h",
-                    approved = false
-                )
+            // Sección ANTERIOR
+            if (anteriores.isNotEmpty()) {
+                item {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    SectionTitle("ANTERIOR")
+                }
+                items(anteriores) { notif ->
+                    NotificationCard(
+                        notif = notif,
+                        onTap = { viewModel.marcarComoLeida(notif.notificacionId) }
+                    )
+                }
             }
-
-            item {
-                Spacer(modifier = Modifier.height(20.dp))
-                SectionTitle("ANTERIOR")
-            }
-
-            item {
-                NotificationCard(
-                    title = "Solicitud Rechazada",
-                    message = "Tu solicitud de Toyota Prado 2027 ha sido rechazada: No cumples con los requisitos mínimos para optar a este crédito.",
-                    time = "Ayer",
-                    approved = false
-                )
-            }
-
         }
-
     }
-
 }
+
 
 @Composable
 fun SupportCard() {
@@ -186,11 +241,17 @@ fun SectionTitle(title: String) {
 
 @Composable
 fun NotificationCard(
-    title: String,
-    message: String,
-    time: String,
-    approved: Boolean
+    notif: NotificationModel,
+    onTap: () -> Unit
 ) {
+    val approved = notif.tipo !in listOf("Urgente", "Cobro")
+
+    val title = notif.titulo ?: ""
+    val message = notif.descripcion ?: ""
+    val time = notif.fechaEnvioNotificacion
+        ?.toDate()
+        ?.toString()
+        ?: ""
 
     val purpleTheme = Color(0xFF673AB7)
     val purpleBackground = Color(0xFFF5F3FF)
