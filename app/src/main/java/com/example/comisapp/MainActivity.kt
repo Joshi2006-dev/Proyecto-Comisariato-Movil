@@ -15,9 +15,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.comisapp.ui.screens.MainScreen
 import com.example.comisapp.ui.screens.OnboardingScreen
 import com.example.comisapp.ui.screens.auth.LoginScreen
@@ -29,7 +31,13 @@ import com.example.comisapp.ui.screens.secondaryNavigationScreens.SuggestionScre
 import com.example.comisapp.ui.screens.transactionScreens.DetalleCreditoScreen
 import com.example.comisapp.ui.theme.ComisAppTheme
 import com.example.comisapp.data.repository.AuthRepository
+import com.example.comisapp.data.repository.CreditRepository
+import com.example.comisapp.data.repository.ProductRepository
+import com.example.comisapp.data.repository.UserRepository
 import com.example.comisapp.ui.screens.ProductDetailScreen
+import com.example.comisapp.ui.screens.ViewModels.CatalogViewModel
+import com.example.comisapp.ui.screens.ViewModels.HomeViewModel
+import com.example.comisapp.ui.screens.ViewModels.ProductDetailViewModel
 import com.example.comisapp.ui.screens.auth.AuthViewModel
 import com.example.comisapp.ui.screens.auth.ChangePasswordScreen
 import com.example.comisapp.ui.screens.sampleProduct
@@ -44,6 +52,11 @@ class MainActivity : ComponentActivity() {
             ComisAppTheme {
                 val nav = rememberNavController()
                 val repo = remember { AuthRepository() }
+                val productRepo = remember { ProductRepository() }
+                val userRepo = remember { UserRepository() }
+                val creditRepo = remember { CreditRepository() }
+
+
 
                 NavHost(
                     navController = nav,
@@ -85,8 +98,17 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    composable("principal"){
-                        MainScreen(navController = nav, authRepo = repo)
+                    composable(
+                        route = "principal?page={page}",
+                        arguments = listOf(
+                            navArgument("page"){
+                                type = NavType.IntType
+                                defaultValue = 0
+                            }
+                        )
+                    ){  backStackEntry ->
+                        val initialPage = backStackEntry.arguments?.getInt("page") ?: 0
+                        MainScreen(navController = nav, authRepo = repo, initialPage = initialPage)
                     }
 
                     composable("notification"){
@@ -145,13 +167,31 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    composable("productDetail"){
-                        ProductDetailScreen(
-                            product = sampleProduct,
-                            onBack = {
-                                nav.popBackStack()
-                            }
-                        )
+                    composable("productDetail/{id}"){
+                        backStackEntry ->
+                        val id = backStackEntry.arguments?.getString("id")
+                        val factoryDetail = remember{
+                            ProductDetailViewModel.Factory(productRepo,creditRepo,userRepo,id ?: "")
+                        }
+                        val productDetailViewModel: ProductDetailViewModel = viewModel(factory = factoryDetail)
+                        if (id != null) {
+                            ProductDetailScreen(
+                                onBack = {
+                                    nav.popBackStack()
+                                },
+                                onNavigateToCredits = {
+                                    nav.popBackStack()
+                                    nav.navigate("principal?page=2"){
+                                        popUpTo("principal"){
+                                            inclusive = true
+                                        }
+                                    }
+                                },
+                                viewModel = productDetailViewModel
+                            )
+                        }
+
+
                     }
 
 

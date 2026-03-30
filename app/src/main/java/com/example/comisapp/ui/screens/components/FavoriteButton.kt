@@ -95,12 +95,9 @@ fun FavoriteButton(
 
     IconButton(
         onClick = {
-            val newState = !isFavorite
-            onToggle(newState)
-            if (newState) {
-                triggered = true
-                soundManager.play()
-            }
+            triggered = true
+            soundManager.play()
+            onToggle(!isFavorite)
         },
     ) {
         Box(

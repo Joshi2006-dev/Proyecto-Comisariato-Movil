@@ -34,11 +34,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.comisapp.data.models.ProductModel
+import com.example.comisapp.ui.screens.ViewModels.CreditRequestState
+import com.example.comisapp.ui.screens.ViewModels.ProductDetailState
+import com.example.comisapp.ui.screens.ViewModels.ProductDetailViewModel
 import com.example.comisapp.ui.screens.components.ButtonComponent
 import com.example.comisapp.ui.screens.components.FavoriteButton
 import com.example.comisapp.ui.theme.TextPurple
 import kotlinx.coroutines.launch
+import kotlin.collections.first
 
 // ─── Color palette ────────────────────────────────────────────────────────────
 private val BrandPurple  = TextPurple
@@ -56,9 +62,9 @@ data class Specification(val label: String, val value: String)
 data class Review(
     val authorName: String,
     val authorAvatarUrl: String,
-    val rating: Int,       // 1-5
+    val rating: Int,
     val comment: String,
-    val timeAgo: String    // "Hace 2 semanas"
+    val timeAgo: String
 )
 
 data class ProductDetail(
@@ -80,34 +86,17 @@ data class ProductDetail(
     val financingMonths: List<Int> = listOf(3, 6, 12, 18, 24)
 )
 
-// ─── Payment mode enum ────────────────────────────────────────────────────────
 private enum class PaymentMode { SINGLE, INSTALLMENTS }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailScreen(
-    product: ProductDetail,
-    onBack: () -> Unit = {}
+    viewModel: ProductDetailViewModel,
+    onBack: () -> Unit = {},
+    onNavigateToCredits:() -> Unit = {},
 ) {
-    var isFavorite by remember { mutableStateOf(false) }
-    val scrollState = rememberScrollState()
-    val coroutineScope = rememberCoroutineScope()
+    val state = viewModel.uiState
 
-    val galleryImages = remember(product) {
-        (listOf(product.mainImageUrl) + product.thumbnailUrls).take(3)
-    }
-    var selectedImageUrl by remember(product) { mutableStateOf(galleryImages.first()) }
-
-    // ── Payment sheet ──────────────────────────────────────────────────────────
-    val paymentSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var showPaymentSheet by remember { mutableStateOf(false) }
-    var paymentMode by remember { mutableStateOf(PaymentMode.SINGLE) }
-    var quantity by remember { mutableIntStateOf(1) }
-    var selectedMonths by remember { mutableIntStateOf(product.financingMonths.firstOrNull() ?: 6) }
-    var monthsMenuExpanded by remember { mutableStateOf(false) }
-    val totalPrice = product.price * quantity
-    val monthlyPayment = if (selectedMonths > 0) totalPrice / selectedMonths else totalPrice
 
     // ── Reviews sheet ──────────────────────────────────────────────────────────
     val reviewsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -115,7 +104,150 @@ fun ProductDetailScreen(
     var reviewInput by remember { mutableStateOf("") }
 
     // ── Payment bottom sheet ───────────────────────────────────────────────────
-    if (showPaymentSheet) {
+//    if (showPaymentSheet) {
+//        ModalBottomSheet(
+//            onDismissRequest = { showPaymentSheet = false },
+//            sheetState = paymentSheetState,
+//            containerColor = Color.White,
+//            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+//        ) {
+//            PaymentBottomSheetContent(
+//                product = product,
+//                paymentMode = paymentMode,
+//                onPaymentModeChange = { paymentMode = it },
+//                quantity = quantity,
+//                onQuantityChange = { quantity = it.coerceAtLeast(1) },
+//                selectedMonths = selectedMonths,
+//                onMonthsChange = { selectedMonths = it },
+//                monthsMenuExpanded = monthsMenuExpanded,
+//                onMonthsMenuExpandedChange = { monthsMenuExpanded = it },
+//                totalPrice = totalPrice,
+//                monthlyPayment = monthlyPayment,
+//                onConfirm = {
+//                    coroutineScope.launch {
+//                        paymentSheetState.hide()
+//                        showPaymentSheet = false
+//                    }
+//                }
+//            )
+//        }
+//    }
+
+    // ── Reviews bottom sheet ───────────────────────────────────────────────────
+//    if (showReviewsSheet) {
+//        ModalBottomSheet(
+//            onDismissRequest = { showReviewsSheet = false },
+//            sheetState = reviewsSheetState,
+//            containerColor = Color.White,
+//            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+//            dragHandle = null                      // we draw our own header with X
+//        ) {
+//            ReviewsBottomSheetContent(
+//                product = product,
+//                reviewInput = reviewInput,
+//                onReviewInputChange = { reviewInput = it },
+//                onClose = {
+//                    coroutineScope.launch {
+//                        reviewsSheetState.hide()
+//                        showReviewsSheet = false
+//                    }
+//                },
+//                onSendReview = {
+//                    // TODO: handle send
+//                    reviewInput = ""
+//                }
+//            )
+//        }
+//    }
+
+    when(state){
+        is  ProductDetailState.Loading-> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
+        is ProductDetailState.Error -> {
+            Text(state.message)
+        }
+        is ProductDetailState.Success -> {
+            MainContent(product = state.product, viewModel, onBack, onNavigateToCredits)
+        }
+    }
+
+}
+
+
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MainContent(
+   product: ProductModel,
+   viewModel: ProductDetailViewModel,
+   onBack: () -> Unit = {},
+   onNavigateToCredits: () -> Unit = {}
+){
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val galleryImages = remember(product){
+        listOfNotNull(
+            product.imagenFrontalUrl?.takeIf { it.isNotBlank() },
+            product.imagenLateralUrl?.takeIf { it.isNotBlank() },
+            product.imagenTraseraUrl?.takeIf { it.isNotBlank() }
+        )
+
+    }
+
+    var selectedImageUrl by remember(product) {
+        mutableStateOf(galleryImages.firstOrNull().orEmpty())
+    }
+
+    val paymentSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showPaymentSheet by remember { mutableStateOf(false) }
+    var paymentMode by remember { mutableStateOf(PaymentMode.SINGLE) }
+    var quantity by remember { mutableIntStateOf(1) }
+    var selectedMonths by remember { mutableIntStateOf(3) }
+    var monthsMenuExpanded by remember { mutableStateOf(false) }
+
+    val precio = if (paymentMode== PaymentMode.SINGLE){
+        product.precioContado?:0.0
+    }else{
+        product.precioCredito?:0.0
+    }
+    val totalPrice = precio * quantity
+    val monthlyPayment = if (paymentMode== PaymentMode.SINGLE){
+        totalPrice
+    }else{
+        totalPrice / selectedMonths
+    }
+
+    val creditState = viewModel.creditRequestState
+    LaunchedEffect(creditState) {
+        when (creditState) {
+            is CreditRequestState.Success -> {
+                paymentSheetState.hide()
+                showPaymentSheet = false
+                val result = snackbarHostState.showSnackbar(
+                    message ="Solicitud enviada con éxito",
+                    actionLabel = "Ver créditos",
+                    duration = SnackbarDuration.Long
+                )
+                if (result === SnackbarResult.ActionPerformed) {
+                    onNavigateToCredits()
+                }
+                viewModel.resetCreditState()
+            }
+            is CreditRequestState.Error -> {
+                snackbarHostState.showSnackbar(creditState.message)
+                viewModel.resetCreditState()
+            }
+            else -> Unit
+        }
+    }
+
+        if (showPaymentSheet) {
         ModalBottomSheet(
             onDismissRequest = { showPaymentSheet = false },
             sheetState = paymentSheetState,
@@ -134,45 +266,21 @@ fun ProductDetailScreen(
                 onMonthsMenuExpandedChange = { monthsMenuExpanded = it },
                 totalPrice = totalPrice,
                 monthlyPayment = monthlyPayment,
+                isLoading = creditState is CreditRequestState.Loading,
                 onConfirm = {
-                    coroutineScope.launch {
-                        paymentSheetState.hide()
-                        showPaymentSheet = false
-                    }
+                    viewModel.requestCredit(
+                        product=product,
+                        quantity = quantity,
+                        plazoMeses = if (paymentMode == PaymentMode.SINGLE) 1 else selectedMonths,
+                        isSingle = paymentMode == PaymentMode.SINGLE
+                        )
                 }
             )
         }
     }
 
-    // ── Reviews bottom sheet ───────────────────────────────────────────────────
-    if (showReviewsSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showReviewsSheet = false },
-            sheetState = reviewsSheetState,
-            containerColor = Color.White,
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            dragHandle = null                      // we draw our own header with X
-        ) {
-            ReviewsBottomSheetContent(
-                product = product,
-                reviewInput = reviewInput,
-                onReviewInputChange = { reviewInput = it },
-                onClose = {
-                    coroutineScope.launch {
-                        reviewsSheetState.hide()
-                        showReviewsSheet = false
-                    }
-                },
-                onSendReview = {
-                    // TODO: handle send
-                    reviewInput = ""
-                }
-            )
-        }
-    }
-
-    // ── Main scaffold ──────────────────────────────────────────────────────────
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -203,10 +311,9 @@ fun ProductDetailScreen(
                 .verticalScroll(scrollState)
         ) {
 
-            // Main image
             AsyncImage(
                 model = selectedImageUrl,
-                contentDescription = product.productName,
+                contentDescription = product.nombre,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -214,7 +321,6 @@ fun ProductDetailScreen(
                     .background(Color(0xFFF0EDE8))
             )
 
-            // Thumbnails
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -242,22 +348,20 @@ fun ProductDetailScreen(
                 }
             }
 
-            // Brand / name / price
+
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                 Text(
-                    product.brandName.uppercase(),
+                    product.categoria?:"".uppercase(),
                     color = BrandPurple, fontSize = 12.sp,
                     fontWeight = FontWeight.Bold, letterSpacing = 1.sp
                 )
                 Spacer(Modifier.height(4.dp))
-                Text(product.productName, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = BodyText)
+                Text(product.nombre?:"", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = BodyText)
                 Spacer(Modifier.height(4.dp))
-                Text(product.priceDisplay, fontSize = 18.sp, fontWeight = FontWeight.Medium, color = BodyText)
+                Text(product.precioContado.toString(), fontSize = 18.sp, fontWeight = FontWeight.Medium, color = BodyText)
             }
 
             Spacer(Modifier.height(16.dp))
-
-            // Action buttons
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -266,17 +370,22 @@ fun ProductDetailScreen(
                 Box(modifier = Modifier.weight(1f)) {
                     ButtonComponent(
                         text = "SOLICITAR PRODUCTO",
-                        onClick = { showPaymentSheet = true }
+                        onClick = {
+                            showPaymentSheet = true
+                        }
                     )
                 }
                 Box(
                     modifier = Modifier
                         .size(52.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFF1C1C1E)),
+                        .background(Color.Black),
                     contentAlignment = Alignment.Center
                 ) {
-                    FavoriteButton(isFavorite = isFavorite, onToggle = { isFavorite = it })
+                    FavoriteButton(
+                        isFavorite = viewModel.isFavorite,
+                        onToggle = { viewModel.toggleFavorite()}
+                    )
                 }
             }
 
@@ -287,52 +396,25 @@ fun ProductDetailScreen(
             Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                 Text("Descripción", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = BodyText)
                 Spacer(Modifier.height(8.dp))
-                Text(product.description, fontSize = 14.sp, color = SubtleText, lineHeight = 22.sp)
+                Text(product.descripcion?:"", fontSize = 14.sp, color = SubtleText, lineHeight = 22.sp)
             }
 
             HorizontalDivider(color = DividerColor)
             Spacer(Modifier.height(8.dp))
 
-            // Specifications
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(SectionBg)
-                    .padding(16.dp)
-            ) {
-                Text(
-                    "ESPECIFICACIONES", fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold, letterSpacing = 1.sp, color = BodyText
-                )
-                Spacer(Modifier.height(12.dp))
-                product.specifications.forEachIndexed { index, spec ->
-                    if (index > 0) HorizontalDivider(color = DividerColor, modifier = Modifier.padding(vertical = 8.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(spec.label, fontSize = 14.sp, color = SubtleText)
-                        Text(spec.value, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = BodyText)
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-            HorizontalDivider(color = DividerColor)
-
-            // Guarantee
             Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                 Text(
                     "POLÍTICA DE GARANTÍA", fontSize = 12.sp,
                     fontWeight = FontWeight.Bold, letterSpacing = 1.sp, color = BodyText
                 )
                 Spacer(Modifier.height(10.dp))
-                Text(product.guaranteeText, fontSize = 14.sp, color = SubtleText, lineHeight = 22.sp)
+                Text("Para agilizar tu proceso, ingresa a nuestra App y dirígete al apartado de \"Garantías o Reclamos\" que se encuentra en el detalle de tu crédito. Desde allí podrás enviar tu solicitud, adjuntar fotos de la falla y recibir una respuesta técnica en un plazo de 7 días hábiles.", fontSize = 14.sp, color = SubtleText, lineHeight = 22.sp)
                 Spacer(Modifier.height(10.dp))
-                BulletSection("Cobertura:", product.coverageItems)
+                BulletSection("Cobertura:", "Fallas técnicas y materiales bajo uso normal.")
                 Spacer(Modifier.height(6.dp))
-                BulletSection("Exclusiones:", product.exclusionItems)
+                BulletSection("Exclusiones:", "Daños por maltrato, accidentes, humedad, variaciones de voltaje o modificaciones no autorizadas.")
                 Spacer(Modifier.height(6.dp))
-                BulletSection("Requisito:", product.requirementItems)
+                BulletSection("Requisito:", "Conservar el comprobante de compra digital o físico.\"\n")
                 Spacer(Modifier.height(14.dp))
                 Text("¿Cómo solicitar tu garantía?", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = BodyText)
                 Spacer(Modifier.height(6.dp))
@@ -347,40 +429,43 @@ fun ProductDetailScreen(
 
             HorizontalDivider(color = DividerColor)
 
-            // ── Reviews summary row (clickable → opens sheet) ──────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showReviewsSheet = true }     // ← opens reviews sheet
+                    .clickable {
+//                        showReviewsSheet = true
+                    }     // ← opens reviews sheet
                     .padding(horizontal = 16.dp, vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Reseñas", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = BodyText)
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    repeat(5) { i ->
-                        Icon(
-                            imageVector = Icons.Filled.Star,
-                            contentDescription = null,
-                            tint = if (i < product.rating.toInt()) StarYellow else DividerColor,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        "${product.rating} / 5.0 (${product.reviewCount})",
-                        fontSize = 13.sp, color = SubtleText
-                    )
-                }
+//                Row(
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+//                ) {
+//                    repeat(5) { i ->
+//                        Icon(
+//                            imageVector = Icons.Filled.Star,
+//                            contentDescription = null,
+//                            tint = if (i < product.rating.toInt()) StarYellow else DividerColor,
+//                            modifier = Modifier.size(18.dp)
+//                        )
+//                    }
+//                    Spacer(Modifier.width(4.dp))
+//                    Text(
+//                        "${product.rating} / 5.0 (${product.reviewCount})",
+//                        fontSize = 13.sp, color = SubtleText
+//                    )
+//                }
             }
 
             Spacer(Modifier.height(8.dp))
         }
     }
+
+
 }
 
 // ─── Reviews Bottom Sheet ─────────────────────────────────────────────────────
@@ -578,7 +663,6 @@ private fun ReviewItem(review: Review) {
     }
 }
 
-// ─── Hint text field (no Material wrapper overhead) ───────────────────────────
 @Composable
 private fun BasicTextFieldHint(
     value: String,
@@ -603,11 +687,10 @@ private fun BasicTextFieldHint(
     }
 }
 
-// ─── Payment Bottom Sheet ─────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PaymentBottomSheetContent(
-    product: ProductDetail,
+    product: ProductModel,
     paymentMode: PaymentMode,
     onPaymentModeChange: (PaymentMode) -> Unit,
     quantity: Int,
@@ -618,8 +701,10 @@ private fun PaymentBottomSheetContent(
     onMonthsMenuExpandedChange: (Boolean) -> Unit,
     totalPrice: Double,
     monthlyPayment: Double,
+    isLoading: Boolean,
     onConfirm: () -> Unit
 ) {
+    val financingMonths = listOf(3, 6, 12, 18, 24)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -661,7 +746,7 @@ private fun PaymentBottomSheetContent(
                     expanded = monthsMenuExpanded,
                     onDismissRequest = { onMonthsMenuExpandedChange(false) }
                 ) {
-                    product.financingMonths.forEach { months ->
+                    financingMonths.forEach { months ->
                         DropdownMenuItem(
                             text = { Text("$months meses") },
                             onClick = { onMonthsChange(months); onMonthsMenuExpandedChange(false) }
@@ -771,8 +856,18 @@ private fun PaymentBottomSheetContent(
         }
 
         Spacer(Modifier.height(24.dp))
-        ButtonComponent(text = "CONFIRMAR SOLICITUD", onClick = onConfirm)
-    }
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = BrandPurple)
+            }
+        } else {
+            ButtonComponent(text = "CONFIRMAR SOLICITUD", onClick = onConfirm)
+        }    }
 }
 
 // ─── Payment mode toggle ──────────────────────────────────────────────────────
@@ -829,20 +924,18 @@ private fun PaymentModeTab(
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 @Composable
-private fun BulletSection(title: String, items: List<String>) {
+private fun BulletSection(title: String, text: String) {
     Column {
-        items.forEach { item ->
             Row(modifier = Modifier.padding(vertical = 2.dp)) {
                 Text("• ", fontSize = 14.sp, color = SubtleText)
                 Text(
                     text = buildAnnotatedString {
                         withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(title) }
-                        append(" $item")
+                        append(" $text")
                     },
                     fontSize = 14.sp, color = SubtleText, lineHeight = 22.sp
                 )
             }
-        }
     }
 }
 

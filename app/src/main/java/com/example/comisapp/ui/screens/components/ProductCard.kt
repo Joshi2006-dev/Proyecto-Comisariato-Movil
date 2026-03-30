@@ -3,6 +3,7 @@ package com.example.comisapp.ui.screens.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -66,15 +67,20 @@ data class Product(
 @Composable
 fun ProductCard(
     product: ProductModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onGoDetail: (String) -> Unit = {},
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = modifier.fillMaxWidth().
+        clickable(
+            enabled = true,
+            onClick = { onGoDetail(product.id) }
+        ),
     ) {
         Column {
 

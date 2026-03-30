@@ -36,10 +36,10 @@ class HomeViewModel(
 
     val productsFlow: Flow<PagingData<ProductModel>> = Pager(
         config = PagingConfig(
-            pageSize = 10,
+            pageSize = 8,
             prefetchDistance = 3,
             enablePlaceholders = false,
-            initialLoadSize = 10,
+            initialLoadSize = 8,
         ),
         pagingSourceFactory = {
             ProductPagination(productosRepo)
