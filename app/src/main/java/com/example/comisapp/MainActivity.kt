@@ -33,6 +33,9 @@ import com.example.comisapp.ui.screens.ProductDetailScreen
 import com.example.comisapp.ui.screens.auth.AuthViewModel
 import com.example.comisapp.ui.screens.auth.ChangePasswordScreen
 import com.example.comisapp.ui.screens.sampleProduct
+import com.example.comisapp.data.repository.SuggestionRepository
+
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,6 +47,7 @@ class MainActivity : ComponentActivity() {
             ComisAppTheme {
                 val nav = rememberNavController()
                 val repo = remember { AuthRepository() }
+                val suggestionRepo = remember { SuggestionRepository() }
 
                 NavHost(
                     navController = nav,

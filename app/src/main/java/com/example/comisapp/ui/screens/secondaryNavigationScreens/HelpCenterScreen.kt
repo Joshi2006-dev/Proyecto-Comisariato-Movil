@@ -21,6 +21,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.comisapp.data.repository.AyudaRepository
 import com.example.comisapp.ui.screens.ViewModels.HelpCenterViewModel
+//Importaciones para whatsapp
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +35,7 @@ fun HelpCenterScreen(
     )
 ) {
     val ayudas by helpCenterViewModel.ayudas.collectAsState()
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -58,6 +63,7 @@ fun HelpCenterScreen(
             )
         }
     ) { paddingValues ->
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -66,7 +72,9 @@ fun HelpCenterScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
             item {
+
                 Spacer(modifier = Modifier.height(40.dp))
 
                 Icon(
@@ -102,6 +110,7 @@ fun HelpCenterScreen(
             }
 
             item {
+
                 Card(
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(
@@ -109,9 +118,11 @@ fun HelpCenterScreen(
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
+
                     Column(
                         modifier = Modifier.padding(20.dp)
                     ) {
+
                         Text(
                             text = "Preguntas Frecuentes",
                             fontWeight = FontWeight.Bold,
@@ -121,26 +132,64 @@ fun HelpCenterScreen(
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        FAQItem(question = "¿Cómo solicito un nuevo crédito?")
+                        // Obtiene todo el texto del campo explicacion
+                        val textoCompleto =
+                            ayudas.firstOrNull()?.explicacion ?: ""
+
+                        // Divide el texto en respuestas usando línea en blanco
+                        val respuestas =
+                            textoCompleto.split("\n\n")
+
+
+                        val respuestaCredito =
+                            respuestas.getOrNull(0) ?: ""
+
+
+                        val respuestaAprobacion =
+                            respuestas.getOrNull(1) ?: ""
+
+
+                        val respuestaMetodoPago =
+                            respuestas.getOrNull(2) ?: ""
+
+
+                        FAQItem(
+                            question = "¿Cómo solicito un nuevo crédito?",
+                            answer = respuestaCredito
+                        )
+
                         Spacer(modifier = Modifier.height(12.dp))
-                        FAQItem(question = "¿Cuál es el tiempo de aprobación?")
+
+                        FAQItem(
+                            question = "¿Cuál es el tiempo de aprobación?",
+                            answer = respuestaAprobacion
+                        )
+
                         Spacer(modifier = Modifier.height(12.dp))
-                        FAQItem(question = "¿Cómo cambio mi método de pago?")
+
+                        FAQItem(
+                            question = "¿Cómo cambio mi método de pago?",
+                            answer = respuestaMetodoPago
+                        )
                     }
                 }
+
                 Spacer(modifier = Modifier.height(32.dp))
             }
 
             item {
+
                 Card(
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.Black),
                     modifier = Modifier.fillMaxWidth()
                 ) {
+
                     Column(
                         modifier = Modifier.padding(32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+
                         Text(
                             text = "Soporte Atento\n24/7",
                             color = Color.White,
@@ -163,12 +212,18 @@ fun HelpCenterScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Button(
-                            onClick = { /* Acción */ },
+                            onClick = {
+                                val numero = "50432505304"
+                                val mensaje = "Hola, necesito ayuda con CREDIFLOW:"
+                                val url = "https://wa.me/$numero?text=${Uri.encode(mensaje)}"
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                context.startActivity(intent)
+                            },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(size = 12.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp)
+                                .height(height = 56.dp)
                         ) {
                             Text(
                                 text = "CONTACTAR AHORA",
@@ -195,7 +250,11 @@ fun HelpCenterScreen(
 }
 
 @Composable
-fun FAQItem(question: String) {
+fun FAQItem(
+    question: String,
+    answer: String
+) {
+
     var expanded by remember { mutableStateOf(false) }
 
     Card(
@@ -204,17 +263,22 @@ fun FAQItem(question: String) {
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { expanded = !expanded }
+            .clickable {
+                expanded = !expanded
+            }
     ) {
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(20.dp)
         ) {
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+
                 Text(
                     text = question,
                     modifier = Modifier.weight(1f),
@@ -232,9 +296,11 @@ fun FAQItem(question: String) {
             }
 
             if (expanded) {
+
                 Spacer(modifier = Modifier.height(12.dp))
+
                 Text(
-                    text = "Aquí aparecerá la respuesta a esta pregunta.",
+                    text = answer,
                     fontSize = 14.sp,
                     color = Color(0xFF64748B),
                     lineHeight = 20.sp

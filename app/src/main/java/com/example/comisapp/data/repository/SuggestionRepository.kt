@@ -3,6 +3,7 @@ package com.example.comisapp.data.repository
 import com.example.comisapp.data.models.SuggestionModel
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
@@ -12,8 +13,14 @@ class SuggestionRepository {
     private val db = Firebase.firestore
     private var lastDocument: DocumentSnapshot? = null
 
+    private val currentUserId: String?
+        get() = FirebaseAuth.getInstance().currentUser?.uid
+
     suspend fun getAllSuggestions(): List<SuggestionModel> {
+        val userId = currentUserId ?: return emptyList()
+
         val result = db.collection("sugerencias")
+            .whereEqualTo("usuarioId", userId)
             .get()
             .await()
         return result.documents.mapNotNull { document ->
@@ -23,7 +30,10 @@ class SuggestionRepository {
     }
 
     suspend fun getSugerencias(limit: Int): List<SuggestionModel> {
+        val userId = currentUserId ?: return emptyList()
+
         var query = db.collection("sugerencias")
+            .whereEqualTo("usuarioId", userId)
             .limit(limit.toLong())
 
         lastDocument?.let {

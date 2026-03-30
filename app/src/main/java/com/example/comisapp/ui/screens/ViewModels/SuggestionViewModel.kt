@@ -8,6 +8,12 @@ import com.example.comisapp.data.repository.SuggestionRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import com.example.comisapp.ui.PaginationSource.SuggestionPaginationSource
+import kotlinx.coroutines.flow.Flow
 
 class SuggestionViewModel(
     private val suggestionRepo: SuggestionRepository
@@ -24,6 +30,17 @@ class SuggestionViewModel(
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
+
+    val suggestionsPaging: Flow<PagingData<SuggestionModel>> =
+        Pager(
+            config = PagingConfig(
+                pageSize = 5,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+                SuggestionPaginationSource(suggestionRepo)
+            }
+        ).flow.cachedIn(viewModelScope)
 
     companion object {
         fun Factory(
