@@ -16,6 +16,7 @@ material3 = "1.4.0"
 foundation = "1.10.5"
 runtimeVersion = "1.10.6"
 pagingCommon = "3.4.2"
+foundationVersion = "1.10.6"
 
 
 [libraries]
@@ -41,6 +42,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3",
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 androidx-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtimeVersion" }
 androidx-paging-common = { group = "androidx.paging", name = "paging-common", version.ref = "pagingCommon" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundationVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

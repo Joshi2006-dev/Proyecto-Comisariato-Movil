@@ -1,13 +1,18 @@
 package com.example.comisapp.data.repository
 
+import android.net.Uri
+import android.util.Log.e
 import com.example.comisapp.data.models.CategoryModel
 import com.example.comisapp.data.models.ProductModel
+import com.example.comisapp.data.models.credits.ClaimModel
 import com.example.comisapp.data.models.credits.CreditModel
 import com.example.comisapp.data.models.credits.QuotaModel
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 
 
 class CreditRepository {
@@ -101,5 +106,82 @@ class CreditRepository {
             lastDocument = if (!result.isEmpty) result.documents.last() else null
         )
 
+    }
+
+
+    suspend fun getClaimsByCreditId(creditId:String) : List<ClaimModel>{
+        val result = db.collection("creditos")
+            .document(creditId)
+            .collection("reclamos")
+            .get()
+            .await()
+        return result.documents.mapNotNull { document ->
+            val reclamo = document.toObject(ClaimModel::class.java)
+            reclamo?.copy(id = document.id)
+        }
+
+    }
+
+    suspend fun addClaim(
+        creditId: String,
+        claim: ClaimModel,
+        imageUri: Uri
+    ): ClaimModel {
+        val storageRef = Firebase.storage.reference
+            .child("reclamos/$creditId/${UUID.randomUUID()}.jpg")
+
+        storageRef.putFile(imageUri).await()
+        val downloadUrl = storageRef.downloadUrl.await().toString()
+
+        val data = hashMapOf(
+            "asunto"       to claim.asunto,
+            "descripcion"  to claim.descripcion,
+            "estado"       to "Pendiente",
+            "evidenciaUrl" to downloadUrl,
+            "fechaEmision" to com.google.firebase.Timestamp.now(),
+            "respuesta"    to null,
+            "atendidoPor"  to null,
+            "fechaRespuesta" to null
+        )
+
+        val docRef = db.collection("creditos")
+            .document(creditId)
+            .collection("reclamos")
+            .add(data)
+            .await()
+
+        return claim.copy(
+            id = docRef.id,
+            evidenciaUrl = downloadUrl,
+            estado = "Pendiente"
+        )
+    }
+
+    suspend fun deleteClaim(creditId: String, claimId: String) {
+        db.collection("creditos")
+            .document(creditId)
+            .collection("reclamos")
+            .document(claimId)
+            .delete()
+            .await()
+    }
+
+    suspend fun updateCredit(
+        creditId: String,
+        cantidad: Int,
+        plazoMeses: Int,
+        cuotaMensual: Double,
+        totalCredito: Double
+    ) {
+        db.collection("creditos")
+            .document(creditId)
+            .update(
+                mapOf(
+                    "cantidad"     to cantidad,
+                    "plazoMeses"   to plazoMeses,
+                    "cuotaMensual" to cuotaMensual,
+                    "totalCredito" to totalCredito
+                )
+            ).await()
     }
 }

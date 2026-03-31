@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.runtime)
     implementation(libs.androidx.paging.common)
+    implementation(libs.androidx.foundation)
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -81,15 +82,10 @@ dependencies {
     // Firebase BOM
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
 
-// Firebase Auth
     implementation("com.google.firebase:firebase-auth")
-
-// Firestore
     implementation("com.google.firebase:firebase-firestore-ktx")
-    // Storage
     implementation("com.google.firebase:firebase-storage-ktx")
     implementation("com.google.firebase:firebase-messaging-ktx")
-
     implementation("androidx.navigation:navigation-compose:2.8.0")
 
 }

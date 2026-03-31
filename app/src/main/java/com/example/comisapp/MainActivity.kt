@@ -43,7 +43,6 @@ import com.example.comisapp.ui.screens.ViewModels.HomeViewModel
 import com.example.comisapp.ui.screens.ViewModels.ProductDetailViewModel
 import com.example.comisapp.ui.screens.auth.AuthViewModel
 import com.example.comisapp.ui.screens.auth.ChangePasswordScreen
-import com.example.comisapp.ui.screens.sampleProduct
 import com.example.comisapp.data.repository.SuggestionRepository
 import com.example.comisapp.ui.screens.ViewModels.CreditDetailViewModel
 
@@ -169,7 +168,7 @@ class MainActivity : ComponentActivity() {
                             backStackEntry ->
                         val id = backStackEntry.arguments?.getString("id")
                         val factoryDetail = remember{
-                            CreditDetailViewModel.Factory(creditRepo,id ?: "")
+                            CreditDetailViewModel.Factory(creditRepo,settingRepo,id ?: "")
                         }
                         val creditViewModel: CreditDetailViewModel = viewModel(factory = factoryDetail)
                         if (id != null) {

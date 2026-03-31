@@ -11,7 +11,7 @@ class UserRepository {
     private val auth = FirebaseAuth.getInstance()
 
     suspend fun getCurrentUser(): UserModel? {
-        val uid = auth.currentUser?.uid ?: return null
+        val uid = auth.currentUser?.email ?: return null
         return try {
             val doc = db.collection("usuarios")
                 .document(uid)

@@ -18,6 +18,6 @@ data class CreditModel(
     val totalCredito: Double = 0.0,
     val usuarioId: String = "",
     val usuario: String = "",
-    val cuotasPagadas: Int = 0
-
+    val cuotasPagadas: Int = 0,
+    val respuesta: String? = ""
 )
