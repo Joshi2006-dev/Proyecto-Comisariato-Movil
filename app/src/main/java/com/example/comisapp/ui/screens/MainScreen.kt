@@ -121,7 +121,7 @@ fun MainScreen(
                 2 ->
                     CreditScreen(
                         onOpenDetail = {
-                            navController.navigate("detalleCredito")
+                            navController.navigate("creditDetail/$it")
                         },
                         creditViewModel
                     )

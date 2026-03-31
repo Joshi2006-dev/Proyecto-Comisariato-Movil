@@ -33,7 +33,11 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -50,6 +54,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.example.comisapp.R
@@ -62,7 +67,7 @@ import com.example.comisapp.ui.screens.ViewModels.CreditViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreditScreen(
-    onOpenDetail: () -> Unit = {},
+    onOpenDetail: (String) -> Unit = {},
     viewModel: CreditViewModel
 ) {
 
@@ -71,6 +76,15 @@ fun CreditScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedTab by remember { mutableIntStateOf(0) }
     val categories = listOf("Todos", "Aprobado", "Pendiente", "Rechazado", "Liquidado")
+
+    var isManualRefreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(creditItems.loadState.refresh) {
+        if (creditItems.loadState.refresh is LoadState.NotLoading) {
+            isManualRefreshing = false
+        }
+    }
+
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -106,14 +120,22 @@ fun CreditScreen(
             }
         }
     ) { paddingValues ->
-        val favoriteStates = remember { mutableStateListOf(*Array(10) { false }) }
-
-        Column(
-            modifier = Modifier.padding(paddingValues).padding(bottom = 55.dp).fillMaxSize().background(Color.White)
-
+        PullToRefreshBox(
+            isRefreshing = isManualRefreshing,
+            onRefresh = {
+                isManualRefreshing = true
+                creditItems.refresh()
+                        },
+            modifier = Modifier
+                .padding(paddingValues)
+                .padding(bottom = 55.dp)
+                .fillMaxSize()
+                .background(Color.White),
         ) {
             LazyColumn(
-                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -121,18 +143,17 @@ fun CreditScreen(
                     count = creditItems.itemCount,
                     key = creditItems.itemKey { it.id }
                 ){
-                    index ->
+                        index ->
                     val credit = creditItems[index]
                     credit?.let {
                         CreditProgressCard(
                             credito = it,
-                            onDetailClick = {}
+                            onDetailClick = { onOpenDetail(credit.id) }
                         )
                     }
 
                 }
             }
-
         }
     }
 }
@@ -141,13 +162,15 @@ fun CreditScreen(
 fun SearchAndFilterBarCredit(query: String, onQueryChange: (String) -> Unit) {
     Row(
         modifier = Modifier
-            .fillMaxWidth().
-            background(Color.White)
+            .fillMaxWidth()
+            .background(Color.White)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
-            modifier = Modifier.weight(1f).height(50.dp),
+            modifier = Modifier
+                .weight(1f)
+                .height(50.dp),
             color = Color(0xFFF2F2F2),
             shape = RoundedCornerShape(12.dp)
         ) {

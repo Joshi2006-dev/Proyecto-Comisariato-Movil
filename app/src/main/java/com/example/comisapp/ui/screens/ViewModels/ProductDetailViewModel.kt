@@ -8,9 +8,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.comisapp.data.models.ProductModel
 import com.example.comisapp.data.models.credits.CreditModel
+import com.example.comisapp.data.models.settings.GuaranteePoliticModel
+import com.example.comisapp.data.models.settings.PlazoModel
 import com.example.comisapp.data.repository.CategoryRepository
 import com.example.comisapp.data.repository.CreditRepository
 import com.example.comisapp.data.repository.ProductRepository
+import com.example.comisapp.data.repository.SettingRepository
 import com.example.comisapp.data.repository.UserRepository
 import com.example.comisapp.ui.screens.components.Product
 import com.google.firebase.auth.FirebaseAuth
@@ -34,6 +37,7 @@ class ProductDetailViewModel (
     private val repo: ProductRepository,
     private val creditRepo: CreditRepository,
     private val userRepo: UserRepository,
+    private val settingRepo: SettingRepository,
     private val productId: String
 ): ViewModel() {
 
@@ -48,11 +52,21 @@ class ProductDetailViewModel (
 
     var creditRequestState by mutableStateOf<CreditRequestState>(CreditRequestState.Idle)
         private set
+
+
+    var plazos by mutableStateOf<List<PlazoModel>>(emptyList())
+        private set
+
+
+    var garantia by mutableStateOf<GuaranteePoliticModel?>(null)
+        private set
+
     private val currentUserId:String?
         get() = FirebaseAuth.getInstance().currentUser?.uid
 
     init {
         loadProduct()
+        loadSettings()
     }
 
     private fun loadProduct(){
@@ -68,6 +82,17 @@ class ProductDetailViewModel (
                 }
             }catch (e: Exception){
                 uiState = ProductDetailState.Error(e.message ?: "Error desconocido")
+            }
+        }
+    }
+
+    private fun loadSettings(){
+        viewModelScope.launch {
+            try {
+                plazos = settingRepo.getPlazos()
+                garantia = settingRepo.getGuaranteePolitics()
+            }catch (e: Exception){
+
             }
         }
     }
@@ -152,11 +177,12 @@ class ProductDetailViewModel (
             repoProd: ProductRepository,
             repoCredit: CreditRepository,
             repoUser: UserRepository,
+            repoSet: SettingRepository,
             id: String
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return ProductDetailViewModel(repoProd,repoCredit,repoUser,id) as T
+                return ProductDetailViewModel(repoProd,repoCredit,repoUser,repoSet,id) as T
             }
         }
     }

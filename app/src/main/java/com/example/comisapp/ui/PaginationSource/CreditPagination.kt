@@ -8,30 +8,32 @@ import com.example.comisapp.data.models.ProductModel
 import com.example.comisapp.data.models.credits.CreditModel
 import com.example.comisapp.data.repository.CreditRepository
 import com.google.firebase.firestore.DocumentSnapshot
-
 class CreditPagination(
     private val repo: CreditRepository,
     private val userId: String,
-) : PagingSource<Int, CreditModel>() {
+) : PagingSource<DocumentSnapshot, CreditModel>() {
 
-    override fun getRefreshKey(state: PagingState<Int, CreditModel>): Int? {
-        return state.anchorPosition?.let{
-            state.closestPageToPosition(it)?.prevKey?.plus(1)
-        }
+    override fun getRefreshKey(state: PagingState<DocumentSnapshot, CreditModel>): DocumentSnapshot? {
+        return null
     }
 
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, CreditModel> {
-        val currentPage = params.key ?: 1
-        return try{
-            val response = repo.getCreditByUserId(userId ,params.loadSize)
-
-            LoadResult.Page(
-                data = response,
-                prevKey = null,
-                nextKey = if (response.isEmpty()) null else 1
+    override suspend fun load(
+        params: LoadParams<DocumentSnapshot>
+    ): LoadResult<DocumentSnapshot, CreditModel> {
+        return try {
+            val lastDocument = params.key
+            val response = repo.getCreditByUserId(
+                userId = userId,
+                limit = params.loadSize,
+                lastDocument = lastDocument
             )
 
-        }catch (e: Exception){
+            LoadResult.Page(
+                data = response.data,
+                prevKey = null,
+                nextKey = response.lastDocument
+            )
+        } catch (e: Exception) {
             LoadResult.Error(e)
         }
     }

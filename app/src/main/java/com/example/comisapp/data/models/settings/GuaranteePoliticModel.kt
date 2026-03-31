@@ -4,5 +4,5 @@ data class GuaranteePoliticModel(
     val id: String = "",
     val cobertura: String = "",
     val exclusiones: String = "",
-    val requisitos: String = "",
+    val requisito: String = "",
 )

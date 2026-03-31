@@ -53,7 +53,7 @@ import java.util.Locale.getDefault
 @Composable
 fun CreditProgressCard(
     credito: CreditModel,
-    onDetailClick: () -> Unit={}
+    onDetailClick: (String) -> Unit={}
 ) {
     val estadoColor: Color = when (credito.estado) {
         "Aprobado"  -> ApbGreen
@@ -131,7 +131,9 @@ fun CreditProgressCard(
 
             ButtonComponent(
                 text = "VER DETALLES",
-                onClick = onDetailClick
+                onClick = {
+                    onDetailClick(credito.id)
+                }
             )
         }
     }
@@ -192,7 +194,9 @@ private fun CreditBodyPending() {
             imageVector = Icons.Default.Info,
             contentDescription = null,
             tint = Color(0xFF757575),
-            modifier = Modifier.size(18.dp).padding(top = 1.dp)
+            modifier = Modifier
+                .size(18.dp)
+                .padding(top = 1.dp)
         )
         Text(
             text = "Tu solicitud está siendo revisada por nuestro equipo. " +
@@ -221,7 +225,9 @@ private fun CreditBodyRejected() {
             imageVector = Icons.Default.Info,
             contentDescription = null,
             tint = RpbRed,
-            modifier = Modifier.size(18.dp).padding(top = 1.dp)
+            modifier = Modifier
+                .size(18.dp)
+                .padding(top = 1.dp)
         )
         Text(
             text = "No cumple con los requisitos mínimos para optar por este crédito.",
@@ -248,7 +254,9 @@ private fun CreditBodyCancelled() {
             imageVector = Icons.Default.Cancel,
             contentDescription = null,
             tint = Color(0xFFFF6B00),
-            modifier = Modifier.size(18.dp).padding(top = 1.dp)
+            modifier = Modifier
+                .size(18.dp)
+                .padding(top = 1.dp)
         )
         Text(
             text = "Este crédito fue cancelado y ya no se encuentra activo.",

@@ -6,6 +6,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +35,7 @@ import com.example.comisapp.ui.theme.ComisAppTheme
 import com.example.comisapp.data.repository.AuthRepository
 import com.example.comisapp.data.repository.CreditRepository
 import com.example.comisapp.data.repository.ProductRepository
+import com.example.comisapp.data.repository.SettingRepository
 import com.example.comisapp.data.repository.UserRepository
 import com.example.comisapp.ui.screens.ProductDetailScreen
 import com.example.comisapp.ui.screens.ViewModels.CatalogViewModel
@@ -40,9 +43,8 @@ import com.example.comisapp.ui.screens.ViewModels.HomeViewModel
 import com.example.comisapp.ui.screens.ViewModels.ProductDetailViewModel
 import com.example.comisapp.ui.screens.auth.AuthViewModel
 import com.example.comisapp.ui.screens.auth.ChangePasswordScreen
-import com.example.comisapp.ui.screens.sampleProduct
 import com.example.comisapp.data.repository.SuggestionRepository
-
+import com.example.comisapp.ui.screens.ViewModels.CreditDetailViewModel
 
 
 class MainActivity : ComponentActivity() {
@@ -58,14 +60,37 @@ class MainActivity : ComponentActivity() {
                 val productRepo = remember { ProductRepository() }
                 val userRepo = remember { UserRepository() }
                 val creditRepo = remember { CreditRepository() }
-
-
+                val settingRepo = remember { SettingRepository() }
                 val suggestionRepo = remember { SuggestionRepository() }
 
                 NavHost(
                     navController = nav,
                     startDestination = if (repo.islogged()) "principal" else "login",
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    enterTransition = {
+                        slideIntoContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                            animationSpec = tween(300)
+                        )
+                    },
+                    exitTransition = {
+                        slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                            animationSpec = tween(300)
+                        )
+                    },
+                    popEnterTransition = {
+                        slideIntoContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                            animationSpec = tween(300)
+                        )
+                    },
+                    popExitTransition = {
+                        slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                            animationSpec = tween(300)
+                        )
+                    }
                 ){
                     composable("onboarding"){
                         OnboardingScreen(
@@ -138,16 +163,26 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
-                    
 
-                    composable("detalleCredito"){
-                        DetalleCreditoScreen(
-                            onBack = {
-                              nav.popBackStack()
-                            }
-                        )
-                    }          
-                              
+                    composable("creditDetail/{id}"){
+                            backStackEntry ->
+                        val id = backStackEntry.arguments?.getString("id")
+                        val factoryDetail = remember{
+                            CreditDetailViewModel.Factory(creditRepo,settingRepo,id ?: "")
+                        }
+                        val creditViewModel: CreditDetailViewModel = viewModel(factory = factoryDetail)
+                        if (id != null) {
+                            DetalleCreditoScreen(
+                                onBack = {
+                                    nav.popBackStack()
+                                },
+                                viewModel = creditViewModel
+                            )
+                        }
+
+
+                    }
+
                               
                     composable("account"){
                         AccountScreen(
@@ -175,7 +210,12 @@ class MainActivity : ComponentActivity() {
                         backStackEntry ->
                         val id = backStackEntry.arguments?.getString("id")
                         val factoryDetail = remember{
-                            ProductDetailViewModel.Factory(productRepo,creditRepo,userRepo,id ?: "")
+                            ProductDetailViewModel.Factory(
+                                productRepo,
+                                creditRepo,
+                                userRepo,
+                                settingRepo,
+                                id ?: "")
                         }
                         val productDetailViewModel: ProductDetailViewModel = viewModel(factory = factoryDetail)
                         if (id != null) {

@@ -37,33 +37,6 @@ data class Product(
     val isFavorite: Boolean = false
 )
 
-// ─────────────────────────────────────────────
-// PRODUCT CARD COMPOSABLE
-//
-// Uso básico:
-//   ProductCard(
-//       product = product,
-//       onFavoriteToggle = { id, newState ->
-//           viewModel.toggleFavorite(id, newState)
-//       }
-//   )
-//
-// Uso en LazyVerticalGrid:
-//   LazyVerticalGrid(
-//       columns = GridCells.Fixed(2),
-//       horizontalArrangement = Arrangement.spacedBy(12.dp),
-//       verticalArrangement = Arrangement.spacedBy(12.dp),
-//       contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
-//   ) {
-//       items(products) { product ->
-//           ProductCard(
-//               product = product,
-//               onFavoriteToggle = { id, state -> viewModel.toggleFavorite(id, state) }
-//           )
-//       }
-//   }
-// ─────────────────────────────────────────────
-
 @Composable
 fun ProductCard(
     product: ProductModel,

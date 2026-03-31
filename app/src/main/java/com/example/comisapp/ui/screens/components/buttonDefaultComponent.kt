@@ -19,10 +19,11 @@ fun ButtonComponent(
     onClick: ()-> Unit = {},
     text: String ="",
     isEnabled: Boolean = true,
+    modifier: Modifier = Modifier
 ){
     Button(
         onClick = { onClick() },
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(52.dp),
         shape = RoundedCornerShape(14.dp),

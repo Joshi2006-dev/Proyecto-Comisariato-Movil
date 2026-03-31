@@ -1,4 +1,4 @@
-package com.example.comisapp.data.models.settings
+package com.example.comisapp.data.models
 
 import com.google.firebase.Timestamp
 
