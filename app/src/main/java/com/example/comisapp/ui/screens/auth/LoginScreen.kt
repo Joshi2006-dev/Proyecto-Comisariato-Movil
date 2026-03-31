@@ -58,6 +58,30 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.comisapp.data.repository.AuthRepository
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
+import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.firestore.FirebaseFirestore
+import android.util.Log
+
+private fun guardarToken(email: String) {
+
+    FirebaseMessaging.getInstance().token
+        .addOnSuccessListener { token ->
+
+            FirebaseFirestore.getInstance()
+                .collection("usuarios")
+                .document(email)
+                .update(
+                    mapOf(
+                        "fcmToken" to token
+                    )
+                )
+
+            Log.d("FCM", "TOKEN GUARDADO: $token")
+        }
+        .addOnFailureListener {
+            Log.e("FCM", "ERROR OBTENIENDO TOKEN")
+        }
+}
 
 
 private fun Modifier.glassBorder(): Modifier =
