@@ -185,4 +185,40 @@ class CreditRepository {
                 )
             ).await()
     }
+
+    suspend fun updateCreditStatus(
+        creditId: String,
+        nuevoEstado: String,
+        usuarioId: String
+    ) {
+        try {
+            val creditRef = db.collection("creditos")
+                .document(creditId)
+
+            // 1. Actualizar estado
+            creditRef.update(
+                mapOf(
+                    "estado" to nuevoEstado,
+                    "fechaRevision" to com.google.firebase.Timestamp.now()
+                )
+            ).await()
+
+            // 2. Crear notificación
+            val notificationData = hashMapOf(
+                "titulo" to "Cambio de estado de crédito",
+                "descripcion" to "Su crédito cambió a: $nuevoEstado",
+                "tipo" to "credito",
+                "destinatarioId" to usuarioId,
+                "leido" to false,
+                "fechaEnvioNotificacion" to com.google.firebase.Timestamp.now()
+            )
+
+            db.collection("notificaciones")
+                .add(notificationData)
+                .await()
+
+        } catch (e: Exception) {
+            println("Error al actualizar estado y crear notificación: $e")
+        }
+    }
 }

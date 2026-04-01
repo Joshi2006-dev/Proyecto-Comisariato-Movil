@@ -15,7 +15,7 @@ class NotificationRepository {
 
     private val db = Firebase.firestore
     private val currentUserId: String?
-        get() = FirebaseAuth.getInstance().currentUser?.uid
+        get() = FirebaseAuth.getInstance().currentUser?.email
 
     // Trae notificaciones del usuario actual + las GLOBAL en tiempo real
     fun getNotificaciones(): Flow<List<NotificationModel>> = callbackFlow {
