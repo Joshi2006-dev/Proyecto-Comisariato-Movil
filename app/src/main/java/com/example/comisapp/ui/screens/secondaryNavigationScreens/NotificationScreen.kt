@@ -26,6 +26,8 @@ import com.example.comisapp.data.repository.NotificationRepository
 import com.example.comisapp.ui.screens.ViewModels.NotificationViewModel
 import java.util.Calendar
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Close
 import com.example.comisapp.data.models.NotificationModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -244,25 +246,50 @@ fun NotificationCard(
     notif: NotificationModel,
     onTap: () -> Unit
 ) {
-    val approved = notif.tipo !in listOf("Urgente", "Cobro")
+    val estado = notif.tipo
 
     val title = notif.titulo ?: ""
     val message = notif.descripcion ?: ""
     val time = notif.fechaEnvioNotificacion
         ?.toDate()
-        ?.toString()
+        ?.let {
+            java.text.SimpleDateFormat(
+                "hh:mm a",
+                java.util.Locale.getDefault()
+            ).format(it)
+        }
         ?: ""
 
     val purpleTheme = Color(0xFF673AB7)
     val purpleBackground = Color(0xFFF5F3FF)
-    val borderColor = if (approved) Color(0xFFDDD6FE) else Color(0xFFF3F4F6)
-    val iconBoxColor = if (approved) Color(0xFFEBE2FF) else Color(0xFFF1F3FC)
-    val iconTint = if (approved) purpleTheme else Color(0xFF5A606C)
+//    val borderColor = if (approved) Color(0xFFDDD6FE) else Color(0xFFF3F4F6)
+//    val iconBoxColor = if (approved) Color(0xFFEBE2FF) else Color(0xFFF1F3FC)
+//    val iconTint = if (approved) purpleTheme else Color(0xFF5A606C)
+
+//    val purpleTheme = Color(0xFF673AB7)
+
+    val borderColor = when (estado) {
+        "credito_aprobado" -> Color(0xFFDDD6FE)
+        "credito_rechazado" -> Color(0xFFE5E7EB)
+        else -> Color(0xFFE5E7EB)
+    }
+
+    val iconBoxColor = when (estado) {
+        "credito_aprobado" -> Color(0xFFEBE2FF)
+        "credito_rechazado" -> Color(0xFFF3F4F6)
+        else -> Color(0xFFF3F4F6)
+    }
+
+    val iconTint = when (estado) {
+        "credito_aprobado" -> purpleTheme
+        "credito_rechazado" -> Color(0xFF9CA3AF)
+        else -> Color(0xFF9CA3AF)
+    }
 
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (approved) purpleBackground else Color.White
+            containerColor = if (estado == "credito_leido") purpleBackground else Color.White
         ),
         border = BorderStroke(1.dp, borderColor),
         modifier = Modifier
@@ -287,7 +314,11 @@ fun NotificationCard(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = if (approved) Icons.Default.CheckCircle else Icons.Default.Cancel,
+                    imageVector = when (estado) {
+                        "credito_aprobado" -> Icons.Default.CheckCircle
+                        "credito_rechazado" -> Icons.Default.Close
+                        else -> Icons.Default.AccessTime
+                    },
                     contentDescription = null,
                     tint = iconTint,
                     modifier = Modifier.size(24.dp)
@@ -299,32 +330,38 @@ fun NotificationCard(
             Column(modifier = Modifier.weight(1f)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+
+                    // TITULO
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp,
                             color = Color(0xFF111827)
-                        )
+                        ),
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1
                     )
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = time,
-                            fontSize = 12.sp,
-                            color = Color(0xFF9CA3AF)
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // HORA
+                    Text(
+                        text = time,
+                        fontSize = 12.sp,
+                        color = Color(0xFF9CA3AF),
+                        maxLines = 1
+                    )
+
+                    if (!notif.leido) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .background(purpleTheme, CircleShape)
                         )
-                        if (approved) {
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .background(purpleTheme, CircleShape)
-                            )
-                        }
                     }
                 }
 

@@ -34,6 +34,8 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.ManageAccounts
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -77,11 +79,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.example.comisapp.R
+import com.example.comisapp.data.repository.NotificationRepository
 import com.example.comisapp.ui.screens.ViewModels.HomeViewModel
+import com.example.comisapp.ui.screens.ViewModels.NotificationViewModel
 import com.example.comisapp.ui.screens.components.CategoryItem
 import com.example.comisapp.ui.screens.components.FavoriteButton
 import com.example.comisapp.ui.screens.components.Product
@@ -117,6 +122,11 @@ fun HomeScreen(
     val productosItems = viewModel.productsFlow.collectAsLazyPagingItems()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
+    val notificationViewModel: NotificationViewModel = viewModel(
+        factory = NotificationViewModel.Factory(NotificationRepository())
+    )
+    val noLeidas by notificationViewModel.noLeidasCount.collectAsState()
+
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -125,7 +135,9 @@ fun HomeScreen(
                 onNavigateToCuenta = onNavigateToCuenta,
                 onCerrarSesion = onLogOut,
                 scrollBehavior = scrollBehavior,
-                onNotificationsClick = onNotificationsClick
+                onNotificationsClick = onNotificationsClick,
+                unreadCount = noLeidas
+
             )
         },
 
@@ -427,7 +439,9 @@ fun AppHeader(
     profileImageUrl: String? = null,
     onNavigateToCuenta: () -> Unit = {},
     onCerrarSesion: () -> Unit = {},
-    onNotificationsClick: () -> Unit = {}
+    onNotificationsClick: () -> Unit = {},
+    unreadCount: Int = 0,
+
 
 ) {
     CenterAlignedTopAppBar(
@@ -463,11 +477,19 @@ fun AppHeader(
                     onNotificationsClick()
                 }
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Notifications,
-                    contentDescription = "Notificaciones",
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
+                BadgedBox(
+                    badge = {
+                        if (unreadCount > 0) {
+                            Badge()
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Notifications,
+                        contentDescription = "Notificaciones",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
 
             ProfilePopover(
