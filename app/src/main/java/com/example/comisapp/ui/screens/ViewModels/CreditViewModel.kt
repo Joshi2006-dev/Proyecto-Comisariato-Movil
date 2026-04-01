@@ -38,7 +38,7 @@ class CreditViewModel(
     private val refreshTrigger = MutableStateFlow(0)
 
     private val currentUserId:String?
-        get() = FirebaseAuth.getInstance().currentUser?.uid
+        get() = FirebaseAuth.getInstance().currentUser?.email
 
 
     val creditsFlow: Flow<PagingData<CreditModel>> = Pager(

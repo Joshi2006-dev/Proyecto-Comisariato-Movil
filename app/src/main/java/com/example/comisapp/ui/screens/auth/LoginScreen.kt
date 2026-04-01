@@ -351,6 +351,7 @@ fun LoginScreen(
                                 error = null
                                 try {
                                     repo.login(email, password)
+                                    guardarToken(email)
                                     onLoginSuccess()
                                 } catch (e: Exception) {
                                     error = "Correo o contraseña incorrectos"
