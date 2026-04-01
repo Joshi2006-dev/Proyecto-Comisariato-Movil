@@ -34,6 +34,7 @@ class CreditRepository {
                 "totalCredito" to credit.totalCredito,
                 "usuarioId" to credit.usuarioId,
                 "usuario" to credit.usuario,
+                "empleadoId" to credit.empleadoId,
                 "cuotasPagadas" to 0
             )
 

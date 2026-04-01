@@ -62,7 +62,7 @@ class ProductDetailViewModel (
         private set
 
     private val currentUserId:String?
-        get() = FirebaseAuth.getInstance().currentUser?.uid
+        get() = FirebaseAuth.getInstance().currentUser?.email
 
     init {
         loadProduct()
@@ -141,6 +141,7 @@ class ProductDetailViewModel (
             try {
                 val currentUser = userRepo.getCurrentUser()
                 val nombreUsuario = currentUser?.nombre?:""
+                val empleadoId = currentUser?.empleadoId?:""
 
                 val precio = if(isSingle) product.precioContado?:0.0 else product.precioCredito?:0.0
 
@@ -157,7 +158,8 @@ class ProductDetailViewModel (
                     productoId = product.id,
                     totalCredito = totalCredito,
                     usuarioId = uid,
-                    usuario = nombreUsuario
+                    usuario = nombreUsuario,
+                    empleadoId = empleadoId
                 )
                 creditRepo.addNewCredit(credit)
                 creditRequestState = CreditRequestState.Success
