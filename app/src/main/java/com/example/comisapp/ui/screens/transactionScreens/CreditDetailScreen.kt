@@ -72,6 +72,8 @@ import com.example.comisapp.ui.screens.components.PaymentMode
 import com.example.comisapp.ui.theme.RpbRed
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.HourglassEmpty
+import com.example.comisapp.ui.screens.components.BodyText
+import com.example.comisapp.ui.screens.components.ReviewsBottomSheetContent
 
 // Colores del Diseño
 val AppPurple = Color(0xFF7E3FF2)
@@ -104,6 +106,9 @@ fun DetalleCreditoScreen(
 
     val editSheetState   = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showEditSheet    by remember { mutableStateOf(false) }
+
+    var showReviewsSheet by remember { mutableStateOf(false) }
+    val reviewsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val claimSheetState  = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showClaimSheet   by remember { mutableStateOf(false) }
@@ -176,6 +181,25 @@ fun DetalleCreditoScreen(
                         precioCredito = uiState.credit.totalCredito / uiState.credit.cantidad
                     )
                 }
+            )
+        }
+    }
+
+    if (showReviewsSheet  && uiState is CreditDetailState.Success) {
+        ModalBottomSheet(
+            onDismissRequest = { showReviewsSheet = false },
+            sheetState = reviewsSheetState,
+            containerColor = Color.White,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            ReviewsBottomSheetContent(
+                productId = uiState.credit.productoId,
+                currentUserId = viewModel.currentUser?.empleadoId.orEmpty(),
+                currentUserName = viewModel.currentUser?.nombre.orEmpty(),
+                currentUserEmail = viewModel.currentUser?.correo.orEmpty(),
+                currentUserPhotoUrl = viewModel.currentUser?.fotoUrl.orEmpty(),
+                onClose = { showReviewsSheet = false },
+                canComment = true
             )
         }
     }
@@ -388,6 +412,21 @@ fun DetalleCreditoScreen(
                                     val quota = quotaItems[cuotaNum]
                                     quota?.let {
                                         CuotaItem(quota,("${(quotaItems.itemCount)-(cuotaNum)}/${uiState.credit.plazoMeses}"))
+                                    }
+                                }
+
+                                item{
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                showReviewsSheet = true
+                                            }
+                                            .padding(horizontal = 16.dp, vertical = 16.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("Reseñas", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = BodyText)
                                     }
                                 }
                             }

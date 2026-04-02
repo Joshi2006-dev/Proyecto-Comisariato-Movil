@@ -43,7 +43,9 @@ import com.google.firebase.messaging.FirebaseMessaging
 
 import kotlinx.coroutines.launch
 import android.util.Log
-
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.setValue
+import com.example.comisapp.data.repository.UserRepository
 
 
 private fun eliminarToken(email: String) {
@@ -73,6 +75,7 @@ fun MainScreen(
     authRepo: AuthRepository,
     initialPage: Int = 0
 ) {
+    var initialCategoriaId by remember { mutableStateOf<String?>(null) }
 
     val screens = listOf(
         BottomBarScreen.Home,
@@ -84,11 +87,15 @@ fun MainScreen(
     val repoCredit = CreditRepository()
     val categoryRepo = CategoryRepository()
     val productRepo = ProductRepository()
+    val userRepo = UserRepository()
+
 
     val factoryHome =
         HomeViewModel.Factory(
             categoryRepo,
-            productRepo
+
+            productRepo,
+            userRepo
         )
 
     val factoryCatalog =
@@ -121,6 +128,12 @@ fun MainScreen(
             pageCount = { screens.size }
         )
 
+    LaunchedEffect(pagerState.currentPage) {
+        if (pagerState.currentPage != 1) {
+            initialCategoriaId = null
+        }
+    }
+
     val scope =
         rememberCoroutineScope()
 
@@ -130,12 +143,12 @@ fun MainScreen(
             CustomBottomBar(
                 pagerState = pagerState,
                 onTabSelected = { index ->
-
+                    if (index == 1) initialCategoriaId = null
                     scope.launch {
                         pagerState.animateScrollToPage(index)
                     }
-
                 }
+
             )
 
         }
@@ -189,12 +202,24 @@ fun MainScreen(
                             navController.navigate(
                                 "productDetail/$it"
                             )
-                        }
+                        },
+                        onGoCategoria = { categoriaId ->
+                            initialCategoriaId = categoriaId
+                            scope.launch {
+                                pagerState.animateScrollToPage(1)
+                            }
+                        },
                     )
 
                 1 ->
                     CatalogScreen(
-                        viewModel = catalogViewModel
+                        viewModel = catalogViewModel,
+                        initialCategoriaId = initialCategoriaId,
+                        onGoDetail = {
+                            navController.navigate(
+                                "productDetail/$it"
+                            )
+                        },
                     )
 
                 2 ->

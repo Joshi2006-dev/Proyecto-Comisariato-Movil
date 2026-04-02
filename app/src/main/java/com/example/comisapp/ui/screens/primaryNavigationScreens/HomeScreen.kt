@@ -1,8 +1,6 @@
 package com.example.comisapp.ui.screens.primaryNavigationScreens
 
-import android.R.attr.text
-import android.service.autofill.OnClickAction
-import androidx.activity.SystemBarStyle.Companion.auto
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,7 +11,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,9 +24,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Logout
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.ManageAccounts
@@ -39,7 +33,6 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,22 +41,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -73,13 +57,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
@@ -88,24 +72,17 @@ import com.example.comisapp.data.repository.NotificationRepository
 import com.example.comisapp.ui.screens.ViewModels.HomeViewModel
 import com.example.comisapp.ui.screens.ViewModels.NotificationViewModel
 import com.example.comisapp.ui.screens.components.CategoryItem
-import com.example.comisapp.ui.screens.components.FavoriteButton
-import com.example.comisapp.ui.screens.components.Product
+import com.example.comisapp.ui.screens.components.CategoryItemSkeleton
 import com.example.comisapp.ui.screens.components.ProductCard
+import com.example.comisapp.ui.screens.components.ProductCardSkeleton
 import com.example.comisapp.ui.theme.CardBorderColor
 import com.example.comisapp.ui.theme.TextPurple
-import kotlinx.coroutines.launch
-import java.util.Locale.getDefault
 
-data class DrawerMenuItem(
-    val icon: ImageVector,
-    val label: String,
-    val onClick: ()-> Unit
-)
 
 data class ProfileMenuItem(
     val icon: ImageVector,
     val label: String,
-    val onClick: ()-> Unit
+    val onClick: ()-> Unit,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -116,11 +93,18 @@ fun HomeScreen(
     onNavigateToCuenta: ()->Unit = {},
     onLogOut: ()-> Unit = {},
     onNotificationsClick: () -> Unit = {},
-    profileImageUrl: String? = null,
+    onGoCategoria: (String) -> Unit = {}
 ){
     val categoriasItems = viewModel.categoriesFlow.collectAsLazyPagingItems()
     val productosItems = viewModel.productsFlow.collectAsLazyPagingItems()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+    val profileUrl= viewModel.currentUser?.fotoUrl
+
+
+    val isLoadingCategories = categoriasItems.loadState.refresh is LoadState.Loading
+    val isLoadingProducts = productosItems.loadState.refresh is LoadState.Loading
+
 
     val notificationViewModel: NotificationViewModel = viewModel(
         factory = NotificationViewModel.Factory(NotificationRepository())
@@ -131,7 +115,7 @@ fun HomeScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             AppHeader(
-                profileImageUrl = profileImageUrl,
+                profileImageUrl = profileUrl,
                 onNavigateToCuenta = onNavigateToCuenta,
                 onCerrarSesion = onLogOut,
                 scrollBehavior = scrollBehavior,
@@ -247,18 +231,25 @@ fun HomeScreen(
                                 horizontalArrangement = Arrangement.spacedBy(15.dp)
 
                             ) {
-                                items(
-                                    count = categoriasItems.itemCount,
-                                    key = categoriasItems.itemKey { it.id }
-                                ){ index ->
-                                    val categoria = categoriasItems[index]
-                                    categoria.let {
-                                        CategoryItem(
-                                            imageRes = it?.imagenUrl ?: "",
-                                            label = it?.nombre ?: ""
-                                        )
+                                if(isLoadingCategories) {
+                                    items(5) {
+                                        CategoryItemSkeleton()
+                                    }
+                                }else{
+                                    items(
+                                        count = categoriasItems.itemCount,
+                                        key = categoriasItems.itemKey { it.id }
+                                    ){ index ->
+                                        val categoria = categoriasItems[index]
+                                        categoria.let {
+                                            CategoryItem(
+                                                categoryModel = it!!,
+                                                onGoCategoria = onGoCategoria
+                                            )
+                                        }
                                     }
                                 }
+
                             }
                             Spacer(modifier = Modifier.height(25.dp))
                             Text(text = "Recomendaciones para ti",style = MaterialTheme.typography.bodySmall.copy(
@@ -276,160 +267,34 @@ fun HomeScreen(
                     }
 
                 }
+
                 items(
-                    count = productosItems.itemCount,
-                    key = productosItems.itemKey { it.id }
+                    count = if (isLoadingProducts) 6 else  productosItems.itemCount,
+                    key = if (isLoadingProducts) null else productosItems.itemKey { it.id }
                 ){
                     index ->
-                    val producto = productosItems[index]
-                    producto?.let {
-                        ProductCard(
-                            product = it,
-                            onGoDetail = onGoDetail
-                        )
-                    }
-                }
-            }
-
-
-        }
-
-
-    }
-
-
-}
-
-@Composable
-fun AppSidebarContent(
-    items: List<DrawerMenuItem>,
-    onClose: () -> Unit = {},
-    profileImageUrl: String?
-) {
-    ModalDrawerSheet(
-        modifier = Modifier.width(280.dp),
-        drawerContainerColor = Color.White
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 5.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                IconButton(onClick = onClose) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = "Cerrar menú",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Row(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(70.dp)
-                            .clip(RoundedCornerShape(15.dp))
-                            .background(Color.Black),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (profileImageUrl != null) {
-                            AsyncImage(
-                                model = profileImageUrl,
-                                contentDescription = "Foto de perfil",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(60.dp)
-                                    .clip(CircleShape)
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Outlined.Person,
-                                contentDescription = "Perfil",
-                                tint = Color.White,
-                                modifier = Modifier.size(40.dp)
+                    if(isLoadingProducts){
+                        ProductCardSkeleton()
+                    }else{
+                        val producto = productosItems[index]
+                        producto?.let {
+                            ProductCard(
+                                product = it,
+                                onGoDetail = onGoDetail
                             )
                         }
                     }
 
                 }
-
             }
-            Spacer(modifier = Modifier.height(10.dp))
-            Column (
-            ) {
-                Text("Josué Vasquez"
-                , fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp)
-                Spacer(modifier = Modifier.height(5.dp))
-                Surface(
-                    shape = RoundedCornerShape(15.dp),
-                    color = TextPurple.copy(alpha = 0.05f)
-                ) {Text("vasquezponcejosuedaniel@gmail.com", modifier = Modifier.padding(horizontal = 10.dp, vertical = 1.dp),
-                    color = TextPurple,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Medium,
-                    letterSpacing = 0.sp
-                    )
-                }
-
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-
 
 
         }
 
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        items.forEach { item ->
-            val isDestructive = item.label == "Cerrar Sesión"
-
-            NavigationDrawerItem(
-                icon = {
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = item.label,
-                        tint = if (isDestructive)
-                            MaterialTheme.colorScheme.error
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp)
-                    )
-                },
-                label = {
-                    Text(
-                        text = item.label,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 15.sp,
-                            color = if (isDestructive)
-                                MaterialTheme.colorScheme.error
-                            else
-                                CardBorderColor
-                        )
-                    )
-                },
-                selected = false,
-                onClick = item.onClick,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
-                colors = NavigationDrawerItemDefaults.colors(
-                    unselectedContainerColor = Color.Transparent
-                )
-            )
-
-            if (isDestructive.not() && item == items[2]) {
-                Spacer(modifier = Modifier.weight(1f))
-            }
-        }
     }
+
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

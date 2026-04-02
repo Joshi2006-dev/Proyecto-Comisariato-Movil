@@ -10,7 +10,7 @@ data class UserModel(
     val estado: String = "",
     val fechaModificacion: Timestamp?=null,
     val fechaRegistro: Timestamp?=null,
-    val imagenUrl: String = "",
+    val fotoUrl: String = "",
     val nombre: String = "",
     val rol: List<String> = emptyList(),
     )

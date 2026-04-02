@@ -2,11 +2,14 @@ package com.example.comisapp.data.repository
 
 import android.util.Log
 import com.example.comisapp.data.models.CategoryModel
+import com.example.comisapp.data.models.CommentModel
 import com.example.comisapp.data.models.ProductModel
 import com.example.comisapp.data.models.FavoriteModel
+import com.example.comisapp.data.models.credits.QuotaModel
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
 
@@ -19,26 +22,57 @@ data class PageResult<T>(
 class ProductRepository {
     private val db = Firebase.firestore
 
-    suspend fun getProductos(limit: Int, lastDocument: DocumentSnapshot? = null, CategoryId: String? = null): PageResult<ProductModel> {
-        Log.d("Firestore", "Consultando productos, limit: $limit, desde: ${lastDocument?.id}")
+    suspend fun getProductos(
+        limit: Int,
+        lastDocument: DocumentSnapshot? = null,
+        CategoryId: String? = null,
+        filter: String? = null
+    ): PageResult<ProductModel> {
+
         var query = db.collection("productos")
             .whereEqualTo("activo", true)
 
-        if(CategoryId != null) query = query.whereEqualTo("categoriaId", CategoryId)
+        if (CategoryId != null) query = query.whereEqualTo("categoriaId", CategoryId)
+
+        query = when (filter) {
+            "home"     -> query.orderBy("fechaRegistro", Query.Direction.DESCENDING)
+            "catalogo" -> query
+                .orderBy("rate", Query.Direction.DESCENDING)
+                .orderBy("fechaRegistro", Query.Direction.DESCENDING)
+            "favs"     -> query.orderBy("fechaRegistro", Query.Direction.DESCENDING)
+            else       -> query.orderBy("fechaRegistro", Query.Direction.DESCENDING)
+        }
 
         query = query.limit(limit.toLong())
-        lastDocument?.let { query = query.startAfter(it) }
+
+        lastDocument?.let {
+            when (filter) {
+                "catalogo" -> {
+                    val rate = it.getDouble("rate")
+                    val fechaRegistro = it.getTimestamp("fechaRegistro")
+                    query = query.startAfter(rate, fechaRegistro)
+                }
+                else -> {
+                    val fechaRegistro = it.getTimestamp("fechaRegistro")
+                    query = query.startAfter(fechaRegistro)
+                }
+            }
+        }
 
         val result = query.get().await()
 
         val productos = result.documents.mapNotNull { doc ->
             doc.toObject(ProductModel::class.java)?.copy(id = doc.id)
         }
+
         return PageResult(
             data = productos,
             lastDocument = if (!result.isEmpty) result.documents.last() else null
         )
     }
+
+
+
 
     suspend fun getProductoById(id: String): ProductModel? {
         return try {
@@ -89,6 +123,30 @@ class ProductRepository {
             .collection("favoritos")
             .document(userId)
             .delete().await()
+    }
+
+
+
+    suspend fun getCommentsByProductId(productId: String, limit: Int, lastDocument: DocumentSnapshot? = null):
+            PageResult<CommentModel>
+    {
+        var query = db.collection("productos")
+            .document(productId)
+            .collection("comentarios")
+            .limit(limit.toLong())
+
+        lastDocument?.let { query = query.startAfter(it) }
+
+        val result = query.get().await()
+
+        val comentarios = result.documents.mapNotNull { doc ->
+            doc.toObject(CommentModel::class.java)?.copy(id = doc.id)
+        }
+        return PageResult(
+            data = comentarios,
+            lastDocument = if (!result.isEmpty) result.documents.last() else null
+        )
+
     }
 
 }
