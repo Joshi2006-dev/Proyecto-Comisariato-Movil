@@ -2,11 +2,16 @@ package com.example.comisapp.ui.screens.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -26,20 +31,28 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.comisapp.R
+import com.example.comisapp.data.models.CategoryModel
+import com.valentinilk.shimmer.ShimmerBounds
+import com.valentinilk.shimmer.rememberShimmer
+import com.valentinilk.shimmer.shimmer
 import java.util.Locale
 import java.util.Locale.getDefault
 
 @Composable
 fun CategoryItem(
-    label: String,
-    imageRes: String
+    categoryModel: CategoryModel,
+    onGoCategoria: (String) -> Unit = {}
 ){
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.size(70.dp).clip(CircleShape)
+            modifier = Modifier.size(70.dp).clip(CircleShape).
+            clickable(
+                enabled = true,
+                onClick = { onGoCategoria(categoryModel.id) }
+            )
         ){
             Box(
                 modifier = Modifier
@@ -50,10 +63,10 @@ fun CategoryItem(
             ){}
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageRes)
+                    .data(categoryModel.imagenUrl)
                     .crossfade(true)
                     .build(),
-                contentDescription = label,
+                contentDescription = categoryModel.nombre,
                 contentScale = ContentScale.Fit,
                 onLoading = {
                 },
@@ -63,7 +76,7 @@ fun CategoryItem(
                     .offset(y = (-2).dp)
             )
         }
-        Text(text = label.uppercase(getDefault()),style = MaterialTheme.typography.bodySmall.copy(
+        Text(text = categoryModel.nombre.uppercase(getDefault()),style = MaterialTheme.typography.bodySmall.copy(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Bold,
             letterSpacing = 0.5.sp,
@@ -72,4 +85,32 @@ fun CategoryItem(
         )
     }
 
+}
+
+@Composable
+fun CategoryItemSkeleton() {
+    val shimmerInstance = rememberShimmer(shimmerBounds = ShimmerBounds.Window)
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(70.dp)
+                .clip(CircleShape)
+                .background(Color.LightGray)
+                .shimmer(shimmerInstance)
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Box(
+            modifier = Modifier
+                .width(45.dp)
+                .height(9.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .shimmer(shimmerInstance)
+                .background(Color.LightGray)
+        )
+    }
 }

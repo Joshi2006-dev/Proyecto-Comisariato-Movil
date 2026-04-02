@@ -25,12 +25,13 @@ class CatalogViewModel(
 ): ViewModel() {
 
     private val _categorias = MutableStateFlow<List<CategoryModel>>(emptyList())
-    val categorias: StateFlow<List<CategoryModel>> =  _categorias
-
+    val categorias: StateFlow<List<CategoryModel>> = _categorias
 
     private val _categoriaSeleccionada = MutableStateFlow<String?>(null)
     val categoriaSeleccionada: StateFlow<String?> = _categoriaSeleccionada
 
+    private val _selectedTab = MutableStateFlow(0)
+    val selectedTab: StateFlow<Int> = _selectedTab
 
     val productsFlow: Flow<PagingData<ProductModel>> =
         categoriaSeleccionada.flatMapLatest { categoriaId ->
@@ -42,12 +43,34 @@ class CatalogViewModel(
                     initialLoadSize = 10,
                 ),
                 pagingSourceFactory = {
-                    ProductPagination(productosRepo, categoriaId)
+                    ProductPagination(productosRepo, categoriaId = categoriaId, filter = "catalogo")
                 }
-            ).flow
-                .cachedIn(viewModelScope)
+            ).flow.cachedIn(viewModelScope)
         }
 
+    fun inicializarCategoria(categoriaId: String?) {
+        _categoriaSeleccionada.value = categoriaId // ← sin el if, para que null también limpie
+    }
+
+    fun seleccionarCategoria(categoriaId: String?) {
+        _categoriaSeleccionada.value = categoriaId
+    }
+
+    fun setSelectedTab(index: Int) {
+        _selectedTab.value = index
+    }
+
+    private fun cargarCategorias() {
+        viewModelScope.launch {
+            try {
+                _categorias.value = categoryRepo.getAllCategorias()
+            } catch (e: Exception) { }
+        }
+    }
+
+    init {
+        cargarCategorias()
+    }
 
 
 
@@ -63,22 +86,6 @@ class CatalogViewModel(
         }
     }
 
-    private fun cargarCategorias() {
-        viewModelScope.launch {
-            try {
-                _categorias.value = categoryRepo.getAllCategorias()
-            }catch (e: Exception){
 
-            }
-        }
-    }
-
-    fun seleccionarCategoria(categoriaId: String?){
-        _categoriaSeleccionada.value = categoriaId
-    }
-
-    init {
-        cargarCategorias()
-    }
 
 }

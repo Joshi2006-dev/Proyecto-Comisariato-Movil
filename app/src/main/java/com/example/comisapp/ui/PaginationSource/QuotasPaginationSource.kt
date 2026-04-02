@@ -6,7 +6,6 @@ import com.example.comisapp.data.models.credits.QuotaModel
 import com.example.comisapp.data.repository.CreditRepository
 import com.google.firebase.firestore.DocumentSnapshot
 
-
 class QuotasPaginationSourcePagination(
     private val repo: CreditRepository,
     private val creditId: String,

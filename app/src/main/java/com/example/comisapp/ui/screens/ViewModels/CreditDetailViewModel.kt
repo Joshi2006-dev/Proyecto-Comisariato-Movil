@@ -12,6 +12,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.example.comisapp.data.models.ProductModel
+import com.example.comisapp.data.models.UserModel
 import com.example.comisapp.data.models.credits.ClaimModel
 import com.example.comisapp.data.models.credits.CreditModel
 import com.example.comisapp.data.models.credits.QuotaModel
@@ -52,6 +53,7 @@ sealed class CreditDetailState {
 }
 class CreditDetailViewModel(
     private val repoCredit: CreditRepository,
+    private val userRepo: UserRepository,
     private val settingRepo: SettingRepository,
     private val creditId: String
 ): ViewModel() {
@@ -59,11 +61,12 @@ class CreditDetailViewModel(
         fun Factory(
             repoCre: CreditRepository,
             repoSet: SettingRepository,
+            repoUser: UserRepository,
             id: String
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return CreditDetailViewModel(repoCre,repoSet,id) as T
+                return CreditDetailViewModel(repoCre,repoUser,repoSet,id) as T
             }
         }
     }
@@ -84,10 +87,14 @@ class CreditDetailViewModel(
     var plazos by mutableStateOf<List<PlazoModel>>(emptyList())
         private set
 
+    var currentUser by mutableStateOf<UserModel?>(null)
+        private set
+
     init {
         loadCredit()
         loadClaims()
         loadSettings()
+        loadCurrentUser()
     }
 
 
@@ -126,6 +133,13 @@ class CreditDetailViewModel(
             }
         }
     }
+
+    private fun loadCurrentUser() {
+        viewModelScope.launch {
+            currentUser = userRepo.getCurrentUser()
+        }
+    }
+
 
     val quotasFlow: Flow<PagingData<QuotaModel>> = Pager(
         config = PagingConfig(

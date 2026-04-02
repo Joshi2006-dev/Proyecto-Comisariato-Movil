@@ -18,6 +18,7 @@ import com.example.comisapp.data.repository.UserRepository
 import com.example.comisapp.ui.screens.components.Product
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import com.example.comisapp.data.models.UserModel
 
 
 sealed class ProductDetailState {
@@ -64,9 +65,13 @@ class ProductDetailViewModel (
     private val currentUserId:String?
         get() = FirebaseAuth.getInstance().currentUser?.email
 
+    var currentUser by mutableStateOf<UserModel?>(null)
+        private set
+
     init {
         loadProduct()
         loadSettings()
+        loadCurrentUser()
     }
 
     private fun loadProduct(){
@@ -83,6 +88,12 @@ class ProductDetailViewModel (
             }catch (e: Exception){
                 uiState = ProductDetailState.Error(e.message ?: "Error desconocido")
             }
+        }
+    }
+
+    private fun loadCurrentUser() {
+        viewModelScope.launch {
+            currentUser = userRepo.getCurrentUser()
         }
     }
 

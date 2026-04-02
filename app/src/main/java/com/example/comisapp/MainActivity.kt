@@ -168,7 +168,7 @@ class MainActivity : ComponentActivity() {
                             backStackEntry ->
                         val id = backStackEntry.arguments?.getString("id")
                         val factoryDetail = remember{
-                            CreditDetailViewModel.Factory(creditRepo,settingRepo,id ?: "")
+                            CreditDetailViewModel.Factory(creditRepo,settingRepo,userRepo,id ?: "")
                         }
                         val creditViewModel: CreditDetailViewModel = viewModel(factory = factoryDetail)
                         if (id != null) {

@@ -9,7 +9,8 @@ import com.google.firebase.firestore.DocumentSnapshot
 
 class ProductPagination(
     private val repo: ProductRepository,
-    private val categoriaId: String? = null
+    private val categoriaId: String? = null,
+    private val filter: String? = null
 ) : PagingSource<DocumentSnapshot, ProductModel>() {
 
     override fun getRefreshKey(state: PagingState<DocumentSnapshot, ProductModel>): DocumentSnapshot? {
@@ -23,11 +24,9 @@ class ProductPagination(
             val pageResult = repo.getProductos(
                 limit = params.loadSize,
                 lastDocument = params.key,
-                CategoryId = categoriaId
+                CategoryId = categoriaId,
+                filter = filter
             )
-
-            Log.d("Paging", "Productos obtenidos: ${pageResult.data.size}")
-            Log.d("Paging", "NextKey: ${pageResult.lastDocument?.id}")
 
             LoadResult.Page(
                 data = pageResult.data,

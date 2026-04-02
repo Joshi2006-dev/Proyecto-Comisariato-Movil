@@ -46,6 +46,7 @@ import com.example.comisapp.ui.screens.components.FavoriteButton
 import com.example.comisapp.ui.screens.components.PaymentBottomSheetContent
 import com.example.comisapp.ui.theme.TextPurple
 import com.example.comisapp.ui.screens.components.PaymentMode
+import com.example.comisapp.ui.screens.components.ReviewsBottomSheetContent
 import kotlinx.coroutines.launch
 import kotlin.collections.first
 
@@ -116,6 +117,10 @@ private fun MainContent(
 
     val paymentSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showPaymentSheet by remember { mutableStateOf(false) }
+
+    var showReviewsSheet by remember { mutableStateOf(false) }
+    val reviewsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     var paymentMode by remember { mutableStateOf(PaymentMode.SINGLE) }
     var quantity by remember { mutableIntStateOf(1) }
     var selectedMonths by remember {
@@ -166,6 +171,24 @@ private fun MainContent(
         }
     }
 
+    if (showReviewsSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showReviewsSheet = false },
+            sheetState = reviewsSheetState,
+            containerColor = Color.White,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            ReviewsBottomSheetContent(
+                productId = product.id,
+                currentUserId = viewModel.currentUser?.empleadoId.orEmpty(),
+                currentUserName = viewModel.currentUser?.nombre.orEmpty(),
+                currentUserEmail = viewModel.currentUser?.correo.orEmpty(),
+                currentUserPhotoUrl = viewModel.currentUser?.fotoUrl.orEmpty(),
+                onClose = { showReviewsSheet = false }
+            )
+        }
+    }
+
         if (showPaymentSheet) {
         ModalBottomSheet(
             onDismissRequest = { showPaymentSheet = false },
@@ -197,6 +220,9 @@ private fun MainContent(
                 }
             )
         }
+
+
+
     }
 
     Scaffold(
@@ -371,8 +397,8 @@ private fun MainContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-//                        showReviewsSheet = true
-                    }     // ← opens reviews sheet
+                        showReviewsSheet = true
+                    }
                     .padding(horizontal = 16.dp, vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -386,196 +412,6 @@ private fun MainContent(
 
 
 }
-//
-//@Composable
-//private fun ReviewsBottomSheetContent(
-//    product: ProductDetail,
-//    reviewInput: String,
-//    onReviewInputChange: (String) -> Unit,
-//    onClose: () -> Unit,
-//    onSendReview: () -> Unit
-//) {
-//    Column(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .fillMaxHeight(0.85f)
-//    ) {
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(horizontal = 16.dp, vertical = 14.dp)
-//        ) {
-//            IconButton(onClick = onClose, modifier = Modifier.align(Alignment.CenterStart)) {
-//                Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = BodyText)
-//            }
-//            Text(
-//                text = "Reseñas",
-//                fontSize = 18.sp,
-//                fontWeight = FontWeight.Bold,
-//                color = BodyText,
-//                modifier = Modifier.align(Alignment.Center)
-//            )
-//        }
-//
-//        HorizontalDivider(color = DividerColor)
-//
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(horizontal = 16.dp, vertical = 14.dp)
-//                .clip(RoundedCornerShape(14.dp))
-//                .background(InfoBlueBg)
-//                .padding(horizontal = 16.dp, vertical = 14.dp)
-//        ) {
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//                verticalAlignment = Alignment.CenterVertically,
-//                horizontalArrangement = Arrangement.SpaceBetween
-//            ) {
-//                Column {
-//                    Text(
-//                        "RESEÑAS", fontSize = 10.sp,
-//                        fontWeight = FontWeight.Bold, letterSpacing = 1.sp, color = SubtleText
-//                    )
-//                    Spacer(Modifier.height(4.dp))
-//                    Row(verticalAlignment = Alignment.Bottom) {
-//                        Text(
-//                            "${product.rating}",
-//                            fontSize = 32.sp, fontWeight = FontWeight.Bold, color = BodyText
-//                        )
-//                        Text(
-//                            " / 5.0", fontSize = 16.sp, color = SubtleText,
-//                            modifier = Modifier.padding(bottom = 4.dp)
-//                        )
-//                    }
-//                }
-//
-//                // Right: stars + count
-//                Column(horizontalAlignment = Alignment.End) {
-//                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-//                        repeat(5) { i ->
-//                            Icon(
-//                                imageVector = Icons.Filled.Star,
-//                                contentDescription = null,
-//                                tint = if (i < product.rating.toInt()) BrandPurple else DividerColor,
-//                                modifier = Modifier.size(20.dp)
-//                            )
-//                        }
-//                    }
-//                    Spacer(Modifier.height(4.dp))
-//                    Text(
-//                        "Basado en ${product.reviewCount} opiniones",
-//                        fontSize = 12.sp, color = SubtleText
-//                    )
-//                }
-//            }
-//        }
-//
-//        // ── Review list ─────────────────────────────────────────────────────
-//        LazyColumn(
-//            modifier = Modifier
-//                .weight(1f)
-//                .fillMaxWidth(),
-//            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-//            verticalArrangement = Arrangement.spacedBy(0.dp)
-//        ) {
-//            items(product.reviews) { review ->
-//                ReviewItem(review = review)
-//                HorizontalDivider(color = DividerColor)
-//            }
-//        }
-//
-//        // ── Add review input ────────────────────────────────────────────────
-//        HorizontalDivider(color = DividerColor)
-//
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(horizontal = 16.dp, vertical = 12.dp)
-//                .navigationBarsPadding(),
-//            verticalAlignment = Alignment.CenterVertically,
-//            horizontalArrangement = Arrangement.spacedBy(10.dp)
-//        ) {
-//            Box(
-//                modifier = Modifier
-//                    .weight(1f)
-//                    .clip(RoundedCornerShape(50.dp))
-//                    .background(SectionBg)
-//                    .padding(horizontal = 16.dp, vertical = 4.dp)
-//            ) {
-//                BasicTextFieldHint(
-//                    value = reviewInput,
-//                    onValueChange = onReviewInputChange,
-//                    hint = "Añade una reseña"
-//                )
-//            }
-//
-//            // Send button
-//            Box(
-//                modifier = Modifier
-//                    .size(44.dp)
-//                    .clip(CircleShape)
-//                    .background(Color(0xFF1C1C1E))
-//                    .clickable(enabled = reviewInput.isNotBlank()) { onSendReview() },
-//                contentAlignment = Alignment.Center
-//            ) {
-//                Icon(
-//                    imageVector = Icons.AutoMirrored.Filled.Send,
-//                    contentDescription = "Enviar",
-//                    tint = Color.White,
-//                    modifier = Modifier.size(20.dp)
-//                )
-//            }
-//        }
-//    }
-//}
-
-//@Composable
-//private fun ReviewItem(review: Review) {
-//    Column(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(vertical = 14.dp)
-//    ) {
-//        // Author row
-//        Row(
-//            modifier = Modifier.fillMaxWidth(),
-//            verticalAlignment = Alignment.CenterVertically
-//        ) {
-//            AsyncImage(
-//                model = review.authorAvatarUrl,
-//                contentDescription = review.authorName,
-//                contentScale = ContentScale.Crop,
-//                modifier = Modifier
-//                    .size(44.dp)
-//                    .clip(CircleShape)
-//                    .background(SectionBg)
-//            )
-//            Spacer(Modifier.width(10.dp))
-//            Column(modifier = Modifier.weight(1f)) {
-//                Text(
-//                    review.authorName,
-//                    fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = BodyText
-//                )
-//                // Stars
-//                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-//                    repeat(5) { i ->
-//                        Icon(
-//                            imageVector = if (i < review.rating) Icons.Filled.Star else Icons.Outlined.StarOutline,
-//                            contentDescription = null,
-//                            tint = if (i < review.rating) BrandPurple else DividerColor,
-//                            modifier = Modifier.size(16.dp)
-//                        )
-//                    }
-//                }
-//            }
-//            Text(review.timeAgo, fontSize = 12.sp, color = SubtleText)
-//        }
-//
-//        Spacer(Modifier.height(8.dp))
-//        Text(review.comment, fontSize = 14.sp, color = BodyText, lineHeight = 20.sp)
-//    }
-//}
 
 @Composable
 private fun BasicTextFieldHint(

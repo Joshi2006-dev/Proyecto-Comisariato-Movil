@@ -41,13 +41,13 @@ import com.example.comisapp.data.models.ProductModel
 import com.example.comisapp.data.models.settings.PlazoModel
 import com.example.comisapp.ui.theme.TextPurple
 
-private val BrandPurple  = TextPurple
-private val SectionBg    = Color(0xFFF5F5F5)
-private val InfoBlueBg   = Color(0xFFEEF2FF)
+val BrandPurple  = TextPurple
+val SectionBg    = Color(0xFFF5F5F5)
+val InfoBlueBg   = Color(0xFFEEF2FF)
 private val InfoBlueIcon = Color(0xFF6366F1)
-private val DividerColor = Color(0xFFE0E0E0)
-private val BodyText     = Color(0xFF212121)
-private val SubtleText   = Color(0xFF757575)
+val DividerColor = Color(0xFFE0E0E0)
+val BodyText     = Color(0xFF212121)
+val SubtleText   = Color(0xFF757575)
 
 enum class PaymentMode { SINGLE, INSTALLMENTS }
 
