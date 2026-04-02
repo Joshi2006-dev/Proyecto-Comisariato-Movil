@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.androidx.runtime)
     implementation(libs.androidx.paging.common)
     implementation(libs.androidx.foundation)
+    implementation(libs.androidx.ui)
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

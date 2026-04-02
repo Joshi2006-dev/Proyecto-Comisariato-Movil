@@ -44,6 +44,7 @@ fun ProductCard(
     product: ProductModel,
     modifier: Modifier = Modifier,
     onGoDetail: (String) -> Unit = {},
+    isFavoriteUi: Boolean = false
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -110,13 +111,15 @@ fun ProductCard(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                Text(
-                    text = product.precioContado.toString() + " L.",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Medium
+                if(!isFavoriteUi){
+                    Text(
+                        text = product.precioContado.toString() + " L.",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium
+                        )
                     )
-                )
+                }
             }
         }
     }

@@ -9,6 +9,7 @@ import com.example.comisapp.data.models.credits.CreditModel
 import com.example.comisapp.data.models.credits.QuotaModel
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.tasks.await
@@ -50,11 +51,20 @@ class CreditRepository {
     suspend fun getCreditByUserId(
         userId: String,
         limit: Int,
-        lastDocument: DocumentSnapshot? = null
+        lastDocument: DocumentSnapshot? = null,
+        estado: String? = null
     ): PageResult<CreditModel> {
         var query = db.collection("creditos")
             .whereEqualTo("usuarioId", userId)
+
+
+        if(estado != null){
+            query = query.whereEqualTo("estado", estado)
+        }
+
+        query = query.orderBy("fechaRegistro", Query.Direction.DESCENDING)
             .limit(limit.toLong())
+
 
         lastDocument?.let { query = query.startAfter(it) }
 

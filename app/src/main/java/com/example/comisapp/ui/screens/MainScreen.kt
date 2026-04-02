@@ -46,6 +46,7 @@ import android.util.Log
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.setValue
 import com.example.comisapp.data.repository.UserRepository
+import com.example.comisapp.ui.screens.ViewModels.SaveViewModel
 
 
 private fun eliminarToken(email: String) {
@@ -109,6 +110,12 @@ fun MainScreen(
             repoCredit
         )
 
+    val factorySave =
+        SaveViewModel.Factory(
+            productRepo
+        )
+
+
     val creditViewModel: CreditViewModel =
         viewModel(factory = factoryCredit)
 
@@ -117,6 +124,10 @@ fun MainScreen(
 
     val homeViewModel: HomeViewModel =
         viewModel(factory = factoryHome)
+
+    val saveViewModel: SaveViewModel =
+        viewModel(factory = factorySave)
+
 
     val auth by remember {
         mutableStateOf(authRepo)
@@ -233,7 +244,14 @@ fun MainScreen(
                     )
 
                 3 ->
-                    SaveScreen()
+                    SaveScreen(
+                        viewModel = saveViewModel,
+                        onGoDetail = {
+                            navController.navigate(
+                                "productDetail/$it"
+                            )
+                        }
+                    )
 
             }
 

@@ -1,64 +1,65 @@
 package com.example.comisapp.ui.screens.primaryNavigationScreens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ScrollableTabRow
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.comisapp.R
-import com.example.comisapp.ui.screens.components.Product
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
+import com.example.comisapp.ui.screens.ViewModels.SaveViewModel
+import com.example.comisapp.ui.screens.components.NotFounAnimation
 import com.example.comisapp.ui.screens.components.ProductCard
-import com.example.comisapp.ui.theme.TextPurple
+import com.example.comisapp.ui.screens.components.ProductCardSkeleton
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SaveScreen() {
+fun SaveScreen(
+    viewModel: SaveViewModel,
+    onGoDetail: (String) -> Unit
+) {
+    val favorites = viewModel.productsFlow.collectAsLazyPagingItems()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    var searchQuery by remember { mutableStateOf("") }
+
+    var isManualRefreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(favorites.loadState.refresh) {
+        if (favorites.loadState.refresh is LoadState.NotLoading) {
+            isManualRefreshing = false
+        }
+    }
+
+    val isFavoriteLoading = favorites.loadState.refresh is LoadState.Loading
+
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -71,7 +72,7 @@ fun SaveScreen() {
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            "Guardados",
+                            "Mis Favoritos",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                         )
                     },
@@ -81,34 +82,55 @@ fun SaveScreen() {
             }
         }
     ) { paddingValues ->
-        val favoriteStates = remember { mutableStateListOf(*Array(10) { true }) }
+        PullToRefreshBox(
+            isRefreshing = isManualRefreshing,
+            onRefresh = {
+                isManualRefreshing = true
+                favorites.refresh()
+            },
+            modifier = Modifier
+                .padding(paddingValues)
+                .padding(bottom = 55.dp)
+                .fillMaxSize()
+                .background(Color.White),
+        ){
 
-        Column(
-            modifier = Modifier.padding(paddingValues).padding(bottom = 55.dp).fillMaxSize().background(Color.White)
-
-        ) {
-
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-//                items(10){
-//                        index ->
-//                    ProductCard(
-//                        product = Product(
-//                            id = index,
-//                            brand = "Sony Electronics",
-//                            name = "Wireless Studio Headphones",
-//                            price = "6,000.00 L.",
-//                            imageRes = R.drawable.testportada,
-//                            isFavorite = favoriteStates[index]
-//                        ),
-////                        onFavoriteToggle = { _, newState -> favoriteStates[index] = newState }
-//                    )
-//                }
+            if (!isFavoriteLoading && favorites.itemCount == 0) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    NotFounAnimation()
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(
+                        count = if (isFavoriteLoading) 6 else favorites.itemCount,
+                        key = if (isFavoriteLoading) null else favorites.itemKey { it.id }
+                    ) { index ->
+                        if (isFavoriteLoading) {
+                            ProductCardSkeleton()
+                        } else {
+                            val producto = favorites[index]
+                            producto?.let {
+                                ProductCard(
+                                    product = it,
+                                    onGoDetail = onGoDetail,
+                                    isFavoriteUi = true
+                                )
+                            }
+                        }
+                    }
+                }
             }
+
         }
     }
 }

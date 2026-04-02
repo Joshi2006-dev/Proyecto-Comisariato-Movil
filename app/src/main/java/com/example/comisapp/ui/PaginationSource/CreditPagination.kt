@@ -11,6 +11,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 class CreditPagination(
     private val repo: CreditRepository,
     private val userId: String,
+    private val estado: String? = null
 ) : PagingSource<DocumentSnapshot, CreditModel>() {
 
     override fun getRefreshKey(state: PagingState<DocumentSnapshot, CreditModel>): DocumentSnapshot? {
@@ -25,7 +26,8 @@ class CreditPagination(
             val response = repo.getCreditByUserId(
                 userId = userId,
                 limit = params.loadSize,
-                lastDocument = lastDocument
+                lastDocument = lastDocument,
+                estado = estado
             )
 
             LoadResult.Page(
