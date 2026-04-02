@@ -69,6 +69,7 @@ import com.example.comisapp.ui.screens.components.NotFounAnimation
 import com.example.comisapp.ui.screens.components.Product
 import com.example.comisapp.ui.screens.components.ProductCard
 import com.example.comisapp.ui.screens.components.ProductCardSkeleton
+import com.example.comisapp.ui.screens.components.SearchAndFilterBar
 import com.example.comisapp.ui.theme.TextPurple
 import kotlinx.coroutines.flow.Flow
 
@@ -86,6 +87,7 @@ fun CatalogScreen(
 
     val categories by viewModel.categorias.collectAsState()
     val productos = viewModel.productsFlow.collectAsLazyPagingItems()
+    val suggestions by viewModel.suggestions.collectAsState()
     val tabs = listOf(CategoryModel(id="", nombre = "Todos"))+categories
 
     val isLoadingProducts = productos.loadState.refresh is LoadState.Loading
@@ -125,7 +127,17 @@ fun CatalogScreen(
 
                 SearchAndFilterBar(
                     query = searchQuery,
-                    onQueryChange = { searchQuery = it }
+                    onQueryChange = {
+                        searchQuery = it
+                        viewModel.onSearchQueryChanged(it)
+                        if (it.isBlank()) viewModel.clearSearch()  // ← esto es todo
+                    },
+                    onSearch = { viewModel.applySearch(it) },
+                    suggestions = suggestions,
+                    onSuggestionSelected = { name ->
+                        searchQuery = name
+                        viewModel.applySearch(name)
+                    }
                 )
 
                 CatalogTabs(
@@ -188,57 +200,7 @@ fun CatalogScreen(
     }
 }
 
-@Composable
-fun SearchAndFilterBar(query: String, onQueryChange: (String) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth().
-                background(Color.White)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            modifier = Modifier.weight(1f).height(50.dp),
-            color = Color(0xFFF2F2F2),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            ) {
-                Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(20.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                BasicTextField(
-                    value = query,
-                    onValueChange = onQueryChange,
-                    singleLine = true,
-                    decorationBox = { innerTextField ->
-                        if (query.isEmpty()) Text("Buscar productos...", color = Color.Gray)
-                        innerTextField()
-                    }
-                )
-            }
-        }
 
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Box(
-            modifier = Modifier
-                .size(50.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color.Black)
-                .clickable { /* Mostrar Filtros */ },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_filter_list),
-                contentDescription = "Filtro",
-                tint = Color.White,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-    }
-}
 
 
 @Composable

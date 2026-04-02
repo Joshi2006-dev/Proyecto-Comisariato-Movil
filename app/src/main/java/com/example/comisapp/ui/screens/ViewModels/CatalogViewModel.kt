@@ -11,18 +11,20 @@ import com.example.comisapp.data.models.CategoryModel
 import com.example.comisapp.data.models.ProductModel
 import com.example.comisapp.data.repository.CategoryRepository
 import com.example.comisapp.data.repository.ProductRepository
-import com.example.comisapp.ui.PaginationSource.CategoryPaginationSource
 import com.example.comisapp.ui.PaginationSource.ProductPagination
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 
 class CatalogViewModel(
     private val categoryRepo: CategoryRepository,
     private val productosRepo: ProductRepository
-): ViewModel() {
+) : ViewModel() {
 
     private val _categorias = MutableStateFlow<List<CategoryModel>>(emptyList())
     val categorias: StateFlow<List<CategoryModel>> = _categorias
@@ -33,23 +35,58 @@ class CatalogViewModel(
     private val _selectedTab = MutableStateFlow(0)
     val selectedTab: StateFlow<Int> = _selectedTab
 
+    private val _suggestions = MutableStateFlow<List<String>>(emptyList())
+    val suggestions: StateFlow<List<String>> = _suggestions
+
+    private val _searchQuery = MutableStateFlow<String?>(null)
+
+    private var searchJob: Job? = null
+    fun onSearchQueryChanged(query: String) {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            if (query.isBlank()) {
+                _suggestions.value = emptyList()
+            } else {
+                delay(300)
+                _suggestions.value = productosRepo.getSuggestions(query)
+            }
+        }
+    }
+
+    fun applySearch(query: String) {
+        _suggestions.value = emptyList()
+        _searchQuery.value = query.ifBlank { null }
+    }
+
+    fun clearSearch() {
+        _searchQuery.value = null
+        _suggestions.value = emptyList()
+    }
+
     val productsFlow: Flow<PagingData<ProductModel>> =
-        categoriaSeleccionada.flatMapLatest { categoriaId ->
+        combine(_categoriaSeleccionada, _searchQuery) { categoriaId, searchQuery ->
+            Pair(categoriaId, searchQuery)
+        }.flatMapLatest { (categoriaId, searchQuery) ->
             Pager(
                 config = PagingConfig(
-                    pageSize = 10,
-                    prefetchDistance = 3,
+                    pageSize = 6,
+                    prefetchDistance = 4,
                     enablePlaceholders = false,
-                    initialLoadSize = 10,
+                    initialLoadSize = 6,
                 ),
                 pagingSourceFactory = {
-                    ProductPagination(productosRepo, categoriaId = categoriaId, filter = "catalogo")
+                    ProductPagination(
+                        repo = productosRepo,
+                        categoriaId = categoriaId,
+                        filter = "catalogo",
+                        searchQuery = searchQuery
+                    )
                 }
             ).flow.cachedIn(viewModelScope)
         }
 
     fun inicializarCategoria(categoriaId: String?) {
-        _categoriaSeleccionada.value = categoriaId // ← sin el if, para que null también limpie
+        _categoriaSeleccionada.value = categoriaId
     }
 
     fun seleccionarCategoria(categoriaId: String?) {
@@ -72,8 +109,6 @@ class CatalogViewModel(
         cargarCategorias()
     }
 
-
-
     companion object {
         fun Factory(
             repoCat: CategoryRepository,
@@ -81,11 +116,8 @@ class CatalogViewModel(
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return CatalogViewModel(repoCat,repoProd) as T
+                return CatalogViewModel(repoCat, repoProd) as T
             }
         }
     }
-
-
-
 }

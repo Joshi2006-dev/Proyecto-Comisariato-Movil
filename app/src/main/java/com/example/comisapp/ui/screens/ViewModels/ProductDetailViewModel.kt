@@ -10,12 +10,10 @@ import com.example.comisapp.data.models.ProductModel
 import com.example.comisapp.data.models.credits.CreditModel
 import com.example.comisapp.data.models.settings.GuaranteePoliticModel
 import com.example.comisapp.data.models.settings.PlazoModel
-import com.example.comisapp.data.repository.CategoryRepository
 import com.example.comisapp.data.repository.CreditRepository
 import com.example.comisapp.data.repository.ProductRepository
 import com.example.comisapp.data.repository.SettingRepository
 import com.example.comisapp.data.repository.UserRepository
-import com.example.comisapp.ui.screens.components.Product
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import com.example.comisapp.data.models.UserModel
@@ -123,10 +121,11 @@ class ProductDetailViewModel (
             isFavoriteLoading = true
             isFavorite = !currentlyFavorite
             try {
+                val product = repo.getProductoById(productId)
                 if(currentlyFavorite){
                     repo.removeFavorite(productId, uid)
                 }else{
-                    repo.addFavorite(productId, uid)
+                    repo.addFavorite(productId, uid, product)
                 }
             }catch (e: Exception){
 

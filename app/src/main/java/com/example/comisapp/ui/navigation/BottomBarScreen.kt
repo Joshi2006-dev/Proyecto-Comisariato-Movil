@@ -6,5 +6,5 @@ sealed class BottomBarScreen(var route: String, var icon: Int, var title: String
     object Home : BottomBarScreen("home", R.drawable.ic_home, "INICIO")
     object Catalogo : BottomBarScreen("catalogo", R.drawable.ic_category, "CATÁLOGO")
     object Creditos : BottomBarScreen("creditos", R.drawable.ic_creditos, "CRÉDITOS")
-    object Guardados : BottomBarScreen("guardados", R.drawable.ic_favorite, "GUARDADOS")
+    object Guardados : BottomBarScreen("guardados", R.drawable.ic_favorite, "FAVORITOS")
 }

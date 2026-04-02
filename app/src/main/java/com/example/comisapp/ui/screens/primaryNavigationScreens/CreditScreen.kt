@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
@@ -34,13 +32,11 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -59,8 +55,6 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.example.comisapp.R
 import com.example.comisapp.ui.screens.components.CreditProgressCard
-import com.example.comisapp.ui.screens.components.Product
-import com.example.comisapp.ui.screens.components.ProductCard
 import com.example.comisapp.ui.theme.TextPurple
 import com.example.comisapp.ui.screens.ViewModels.CreditViewModel
 
@@ -73,8 +67,7 @@ fun CreditScreen(
 
     val creditItems = viewModel.creditsFlow.collectAsLazyPagingItems()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedTab by remember { mutableIntStateOf(0) }
+    val selectedTab by viewModel.selectedTab.collectAsState()
     val categories = listOf("Todos", "Aprobado", "Pendiente", "Rechazado", "Liquidado")
 
     var isManualRefreshing by remember { mutableStateOf(false) }
@@ -107,15 +100,10 @@ fun CreditScreen(
                     )
                 )
 
-                SearchAndFilterBarCredit(
-                    query = searchQuery,
-                    onQueryChange = { searchQuery = it }
-                )
-
                 CreditTabs(
                     categories = categories,
                     selectedTabIndex = selectedTab,
-                    onTabSelected = { selectedTab = it }
+                    onTabSelected = { viewModel.onTabSelected(it)  }
                 )
             }
         }
@@ -134,8 +122,7 @@ fun CreditScreen(
         ) {
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
+                    .fillMaxWidth(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -157,61 +144,6 @@ fun CreditScreen(
         }
     }
 }
-
-@Composable
-fun SearchAndFilterBarCredit(query: String, onQueryChange: (String) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            modifier = Modifier
-                .weight(1f)
-                .height(50.dp),
-            color = Color(0xFFF2F2F2),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            ) {
-                Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(20.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                BasicTextField(
-                    value = query,
-                    onValueChange = onQueryChange,
-                    singleLine = true,
-                    decorationBox = { innerTextField ->
-                        if (query.isEmpty()) Text("Buscar productos...", color = Color.Gray)
-                        innerTextField()
-                    }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Box(
-            modifier = Modifier
-                .size(50.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color.Black)
-                .clickable { /* Mostrar Filtros */ },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_filter_list),
-                contentDescription = "Filtro",
-                tint = Color.White,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-    }
-}
-
 
 @Composable
 fun CreditTabs(
