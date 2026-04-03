@@ -9,5 +9,6 @@ data class NotificationModel(
     val tipo: String = "",
     val destinatarioId: String = "",
     val leido: Boolean = false,
+    val creditoId: String? = null,        // id del crédito relacionado
     val fechaEnvioNotificacion: Timestamp? = null
 )

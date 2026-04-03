@@ -1,5 +1,7 @@
 package com.example.comisapp
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
@@ -45,12 +47,29 @@ import com.example.comisapp.ui.screens.auth.AuthViewModel
 import com.example.comisapp.ui.screens.auth.ChangePasswordScreen
 import com.example.comisapp.data.repository.SuggestionRepository
 import com.example.comisapp.ui.screens.ViewModels.CreditDetailViewModel
+import kotlin.jvm.java
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // ── Canal de notificaciones ───────────────────────────────────
+        // Usa el mismo channelId "notificaciones" que ya tienes en
+        // MyFirebaseMessagingService
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val manager = getSystemService(NotificationManager::class.java)
+            val canal = NotificationChannel(
+                "notificaciones_credito",
+                "Notificaciones",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Notificaciones de solicitudes de crédito"
+                enableVibration(true)
+            }
+            manager.createNotificationChannel(canal)
+        }
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
@@ -183,7 +202,7 @@ class MainActivity : ComponentActivity() {
 
                     }
 
-                              
+
                     composable("account"){
                         AccountScreen(
                             onBackClick = {

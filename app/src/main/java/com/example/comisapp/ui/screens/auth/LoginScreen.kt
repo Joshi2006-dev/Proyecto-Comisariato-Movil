@@ -63,19 +63,15 @@ import com.google.firebase.firestore.FirebaseFirestore
 import android.util.Log
 
 private fun guardarToken(email: String) {
-
     FirebaseMessaging.getInstance().token
         .addOnSuccessListener { token ->
-
             FirebaseFirestore.getInstance()
                 .collection("usuarios")
                 .document(email)
-                .update(
-                    mapOf(
-                        "fcmToken" to token
-                    )
+                .set(
+                    mapOf("fcmToken" to token),
+                    com.google.firebase.firestore.SetOptions.merge()
                 )
-
             Log.d("FCM", "TOKEN GUARDADO: $token")
         }
         .addOnFailureListener {
