@@ -172,7 +172,7 @@ class CreditDetailViewModel(
                     cuotaMensual = cuotaMensual,
                     totalCredito = totalCredito
                 )
-                // Actualizar el estado local sin recargar Firestore
+
                 uiState = CreditDetailState.Success(
                     credit.copy(
                         cantidad     = cantidad,
@@ -203,9 +203,9 @@ class CreditDetailViewModel(
                         asunto      = asunto,
                         descripcion = descripcion
                     ),
-                    imageUri = imageUri
+                    imageUri = imageUri,
+                    solicitante = currentUser?.nombre ?: ""
                 )
-                // Agregar al estado local sin recargar
                 _claims.value = _claims.value + newClaim
                 claimSubmitState = ClaimSubmitState.Success
             } catch (e: Exception) {
@@ -217,8 +217,7 @@ class CreditDetailViewModel(
     fun deleteClaim(claimId: String) {
         viewModelScope.launch {
             try {
-                repoCredit.deleteClaim(creditId, claimId)
-                // Remover del estado local sin recargar
+                repoCredit.deleteClaim(creditId)
                 _claims.value = _claims.value.filter { it.id != claimId }
             } catch (e: Exception) {
                 // silencioso por ahora

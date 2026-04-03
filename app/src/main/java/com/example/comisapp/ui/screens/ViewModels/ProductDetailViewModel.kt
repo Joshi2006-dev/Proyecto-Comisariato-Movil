@@ -166,6 +166,7 @@ class ProductDetailViewModel (
                     nombreProducto = product.nombre?:"",
                     plazoMeses = plazoMeses,
                     productoId = product.id,
+                    plazoGarantia = product.garantiaMeses?:0,
                     totalCredito = totalCredito,
                     usuarioId = uid,
                     usuario = nombreUsuario,

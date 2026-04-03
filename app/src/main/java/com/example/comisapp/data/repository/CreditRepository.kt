@@ -32,6 +32,7 @@ class CreditRepository {
                 "nombreProducto" to credit.nombreProducto,
                 "plazoMeses" to credit.plazoMeses,
                 "productoId" to credit.productoId,
+                "plazoGarantia" to credit.plazoGarantia,
                 "totalCredito" to credit.totalCredito,
                 "usuarioId" to credit.usuarioId,
                 "usuario" to credit.usuario,
@@ -120,23 +121,23 @@ class CreditRepository {
     }
 
 
-    suspend fun getClaimsByCreditId(creditId:String) : List<ClaimModel>{
-        val result = db.collection("creditos")
-            .document(creditId)
-            .collection("reclamos")
+    suspend fun getClaimsByCreditId(creditId: String): List<ClaimModel> {
+        val result = db.collection("reclamos")
+            .whereEqualTo("creditId", creditId)
             .get()
             .await()
+
         return result.documents.mapNotNull { document ->
             val reclamo = document.toObject(ClaimModel::class.java)
             reclamo?.copy(id = document.id)
         }
-
     }
 
     suspend fun addClaim(
         creditId: String,
         claim: ClaimModel,
-        imageUri: Uri
+        imageUri: Uri,
+        solicitante: String
     ): ClaimModel {
         val storageRef = Firebase.storage.reference
             .child("reclamos/$creditId/${UUID.randomUUID()}.jpg")
@@ -144,38 +145,36 @@ class CreditRepository {
         storageRef.putFile(imageUri).await()
         val downloadUrl = storageRef.downloadUrl.await().toString()
 
-        // Obtenemos el ID del usuario actual para la notificación
-        val userEmail = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.email ?: ""
+        val userEmail = com.google.firebase.auth.FirebaseAuth.getInstance()
+            .currentUser?.email ?: ""
 
         val data = hashMapOf(
-            "asunto"       to claim.asunto,
-            "descripcion"  to claim.descripcion,
-            "estado"       to "Pendiente",
-            "evidenciaUrl" to downloadUrl,
-            "fechaEmision" to com.google.firebase.Timestamp.now(),
-            "respuesta"    to null,
-            "atendidoPor"  to null,
+            "creditId"       to creditId,
+            "asunto"         to claim.asunto,
+            "descripcion"    to claim.descripcion,
+            "estado"         to "Pendiente",
+            "evidenciaUrl"   to downloadUrl,
+            "fechaEmision"   to com.google.firebase.Timestamp.now(),
+            "respuesta"      to null,
+            "atendidoPor"    to null,
             "fechaRespuesta" to null,
-            "usuarioId"    to userEmail // Campo vital para que funcione el index.js
+            "usuarioId"      to userEmail,
+            "solicitante"    to solicitante
         )
 
-        val docRef = db.collection("creditos")
-            .document(creditId)
-            .collection("reclamos")
+        val docRef = db.collection("reclamos")
             .add(data)
             .await()
 
         return claim.copy(
-            id = docRef.id,
+            id           = docRef.id,
             evidenciaUrl = downloadUrl,
-            estado = "Pendiente"
+            estado       = "Pendiente"
         )
     }
 
-    suspend fun deleteClaim(creditId: String, claimId: String) {
-        db.collection("creditos")
-            .document(creditId)
-            .collection("reclamos")
+    suspend fun deleteClaim(claimId: String) {
+        db.collection("reclamos")
             .document(claimId)
             .delete()
             .await()
