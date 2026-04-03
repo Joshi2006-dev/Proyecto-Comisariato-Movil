@@ -5,6 +5,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.messaging.FirebaseMessaging
 
 class AuthRepository {
     private val auth    = FirebaseAuth.getInstance()
@@ -16,8 +17,26 @@ class AuthRepository {
         auth.signInWithEmailAndPassword(email, pass).await()
     }
 
+
     //Logout
-    fun logout() { auth.signOut() }
+    suspend fun logout() {
+        try {
+            val email = auth.currentUser?.email
+            if (email != null) {
+                // Borra el token de Firestore
+                db.collection("usuarios")
+                    .document(email)
+                    .update("fcmToken", null)
+                    .await()
+            }
+            // Borra el token local de FCM
+            FirebaseMessaging.getInstance().deleteToken().await()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            auth.signOut()
+        }
+    }
 
     fun currentUser(): String{
         return auth.currentUser?.uid ?: ""

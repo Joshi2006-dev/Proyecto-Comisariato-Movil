@@ -186,27 +186,26 @@ fun MainScreen(
                         },
 
                         onLogOut = {
-
-                            val email =
-                                FirebaseAuth
+                            scope.launch {
+                                val email = FirebaseAuth
                                     .getInstance()
                                     .currentUser
                                     ?.email
 
-                            if (email != null) {
-                                eliminarToken(email)
-                            }
-
-                            auth.logout()
-
-                            navController.navigate("login") {
-
-                                popUpTo("principal") {
-                                    inclusive = true
+                                if (email != null) {
+                                    eliminarToken(email)
                                 }
 
-                            }
+                                FirebaseMessaging.getInstance().deleteToken()
 
+                                auth.logout()
+
+                                navController.navigate("login") {
+                                    popUpTo("principal") {
+                                        inclusive = true
+                                    }
+                                }
+                            }
                         },
 
                         onGoDetail = {

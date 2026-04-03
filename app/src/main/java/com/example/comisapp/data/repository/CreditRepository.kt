@@ -144,6 +144,9 @@ class CreditRepository {
         storageRef.putFile(imageUri).await()
         val downloadUrl = storageRef.downloadUrl.await().toString()
 
+        // Obtenemos el ID del usuario actual para la notificación
+        val userEmail = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.email ?: ""
+
         val data = hashMapOf(
             "asunto"       to claim.asunto,
             "descripcion"  to claim.descripcion,
@@ -152,7 +155,8 @@ class CreditRepository {
             "fechaEmision" to com.google.firebase.Timestamp.now(),
             "respuesta"    to null,
             "atendidoPor"  to null,
-            "fechaRespuesta" to null
+            "fechaRespuesta" to null,
+            "usuarioId"    to userEmail // Campo vital para que funcione el index.js
         )
 
         val docRef = db.collection("creditos")
@@ -212,20 +216,6 @@ class CreditRepository {
                     "fechaRevision" to com.google.firebase.Timestamp.now()
                 )
             ).await()
-
-            // 2. Crear notificación
-            val notificationData = hashMapOf(
-                "titulo" to "Cambio de estado de crédito",
-                "descripcion" to "Su crédito cambió a: $nuevoEstado",
-                "tipo" to "credito",
-                "destinatarioId" to usuarioId,
-                "leido" to false,
-                "fechaEnvioNotificacion" to com.google.firebase.Timestamp.now()
-            )
-
-            db.collection("notificaciones")
-                .add(notificationData)
-                .await()
 
         } catch (e: Exception) {
             println("Error al actualizar estado y crear notificación: $e")

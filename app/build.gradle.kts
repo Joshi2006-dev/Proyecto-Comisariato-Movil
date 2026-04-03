@@ -90,5 +90,6 @@ dependencies {
     implementation("com.google.firebase:firebase-storage-ktx")
     implementation("com.google.firebase:firebase-messaging-ktx")
     implementation("androidx.navigation:navigation-compose:2.8.0")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 
 }
