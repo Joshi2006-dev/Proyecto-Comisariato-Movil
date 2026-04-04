@@ -1,5 +1,8 @@
 package com.example.comisapp.ui.screens.ViewModels
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -12,11 +15,14 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.example.comisapp.data.models.UserModel
+import com.example.comisapp.data.repository.UserRepository
 import com.example.comisapp.ui.PaginationSource.SuggestionPaginationSource
 import kotlinx.coroutines.flow.Flow
 
 class SuggestionViewModel(
-    private val suggestionRepo: SuggestionRepository
+    private val suggestionRepo: SuggestionRepository,
+    private val userRepo: UserRepository
 ) : ViewModel() {
 
     private val _sugerencias = MutableStateFlow<List<SuggestionModel>>(emptyList())
@@ -42,13 +48,25 @@ class SuggestionViewModel(
             }
         ).flow.cachedIn(viewModelScope)
 
+
+    var currentUser by mutableStateOf<UserModel?>(null)
+        private set
+
+    private fun loadCurrentUser() {
+        viewModelScope.launch {
+            currentUser = userRepo.getCurrentUser()
+        }
+    }
+
+
     companion object {
         fun Factory(
-            repo: SuggestionRepository
+            repo: SuggestionRepository,
+            repoUser: UserRepository
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return SuggestionViewModel(repo) as T
+                return SuggestionViewModel(repo, repoUser) as T
             }
         }
     }
@@ -71,7 +89,7 @@ class SuggestionViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                suggestionRepo.addSugerencia(usuarioId, asunto, descripcion)
+                suggestionRepo.addSugerencia(usuarioId, asunto, descripcion, currentUser ?: UserModel())
                 _enviado.value = true
                 cargarSugerencias()
             } catch (e: Exception) {
@@ -92,5 +110,6 @@ class SuggestionViewModel(
 
     init {
         cargarSugerencias()
+        loadCurrentUser()
     }
 }

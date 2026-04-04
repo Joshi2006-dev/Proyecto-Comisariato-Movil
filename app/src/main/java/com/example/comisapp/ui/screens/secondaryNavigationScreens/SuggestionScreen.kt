@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.comisapp.data.repository.SuggestionRepository
+import com.example.comisapp.data.repository.UserRepository
 import com.example.comisapp.ui.screens.ViewModels.SuggestionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,7 +29,7 @@ import com.example.comisapp.ui.screens.ViewModels.SuggestionViewModel
 fun SuggestionScreen(
     onBackClick: () -> Unit,
     suggestionViewModel: SuggestionViewModel = viewModel(
-        factory = SuggestionViewModel.Factory(SuggestionRepository())
+        factory = SuggestionViewModel.Factory(SuggestionRepository(), UserRepository())
     )
 ) {
     val sheetState = rememberModalBottomSheetState()

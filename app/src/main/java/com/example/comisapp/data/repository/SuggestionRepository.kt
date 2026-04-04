@@ -1,6 +1,7 @@
 package com.example.comisapp.data.repository
 
 import com.example.comisapp.data.models.SuggestionModel
+import com.example.comisapp.data.models.UserModel
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -52,21 +53,38 @@ class SuggestionRepository {
         }
     }
 
-    suspend fun addSugerencia(usuarioId: String, asunto: String, descripcion: String) {
-        val now = Timestamp.now()
-        val nuevaSugerencia = SuggestionModel(
-            usuarioId = usuarioId,
-            asunto = asunto,
-            descripcion = descripcion,
-            fechaRegistro = now,
-            fechaModificacion = now
-        )
-        val docRef = db.collection("sugerencias").add(nuevaSugerencia).await()
-        db.collection("sugerencias").document(docRef.id)
-            .update("sugerenciaId", docRef.id)
-            .await()
-    }
+    suspend fun addSugerencia(
+        usuarioId: String,
+        asunto: String,
+        descripcion: String,
+        usuario: UserModel
+    ) {
+        try {
+            val now = Timestamp.now()
 
+            val newDocRef = db.collection("sugerencias").document()
+            val sugerenciaId = newDocRef.id
+
+            val sugerenciaMap = hashMapOf(
+                "sugerenciaId" to sugerenciaId,
+                "usuarioId" to usuarioId,
+                "asunto" to asunto,
+                "descripcion" to descripcion,
+                "fechaRegistro" to now,
+                "fechaModificacion" to now,
+                "nombreUsuario" to usuario.nombre,
+                "emailUsuario" to usuario.correo,
+                "fotoUsuario" to usuario.fotoUrl
+            )
+
+            newDocRef.set(sugerenciaMap).await()
+
+            println("Sugerencia agregada con ID: $sugerenciaId")
+
+        } catch (e: Exception) {
+            throw e
+        }
+    }
     fun resetPagination() {
         lastDocument = null
     }
