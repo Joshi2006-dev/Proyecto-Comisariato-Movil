@@ -89,6 +89,7 @@ private fun Modifier.glassBorder(): Modifier =
 
 @Composable
 fun LoginScreen(
+    navController: androidx.navigation.NavHostController,
     onLoginSuccess: () -> Unit = {},
     onForgotPasswordClick: () -> Unit = {}
 
@@ -140,10 +141,6 @@ fun LoginScreen(
                     )
             )
         }
-
-
-
-
 
         Column(
             modifier = Modifier
@@ -218,7 +215,6 @@ fun LoginScreen(
             ) {
                 Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 24.dp)) {
 
-                    // Correo electrónico
                     Text(
                         text = "CORREO ELECTRÓNICO",
                         color = LabelColor,
@@ -336,8 +332,16 @@ fun LoginScreen(
 
 
                     error?.let {
-                        Text(it, color = Color.Red, fontSize = 12.sp)
-                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = it,
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            lineHeight = 16.sp, // Esto permite que el texto respire si ocupa 2 líneas
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp)
+                        )
                     }
                     ButtonComponent(
                         text = if (isLoading) "ENTRANDO..." else "ENTRAR",
@@ -350,12 +354,43 @@ fun LoginScreen(
                                     guardarToken(email)
                                     onLoginSuccess()
                                 } catch (e: Exception) {
-                                    error = "Correo o contraseña incorrectos"
+
+                                    error = e.message ?: "Error desconocido"
                                 } finally {
                                     isLoading = false
                                 }
                             }
                         }
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "¿NO TIENES UNA CUENTA?",
+                    color = TextGray,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.5.sp
+                )
+                TextButton(
+                    onClick = {
+                        navController.navigate("register")
+                    },
+                    contentPadding = PaddingValues(start = 8.dp)
+                ) {
+                    Text(
+                        text = "REGÍSTRATE",
+                        color = TextPurple,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 0.5.sp
                     )
                 }
             }

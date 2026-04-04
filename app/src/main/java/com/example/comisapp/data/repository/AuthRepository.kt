@@ -12,9 +12,27 @@ class AuthRepository {
     private val db      = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance()
 
-    //login
     suspend fun login(email: String, pass: String) {
-        auth.signInWithEmailAndPassword(email, pass).await()
+        val userDoc = db.collection("usuarios")
+            .document(email)
+            .get()
+            .await()
+
+        if (userDoc.exists()) {
+            val estado = userDoc.getString("estado") ?: "INACTIVO"
+            if (estado == "INACTIVO") {
+
+                throw Exception("Tu cuenta está INACTIVA. Comunícate con los administradores.")
+            }
+        } else {
+            throw Exception("Este correo no está registrado.")
+        }
+        try {
+            auth.signInWithEmailAndPassword(email, pass).await()
+        } catch (e: Exception) {
+
+            throw Exception("Correo o contraseña incorrectos")
+        }
     }
 
 
@@ -61,6 +79,32 @@ class AuthRepository {
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+
+    suspend fun register(email: String, pass: String) {
+        //  Verificar si el email existe en la colección de Firestore
+        val userCheck = db.collection("usuarios")
+            .whereEqualTo("correo", email)
+            .get()
+            .await()
+
+        if (userCheck.isEmpty) {
+
+            throw Exception("Este correo no está autorizado para registrarse.")
+        }
+
+        // 2. Intentar crear el usuario en Auth
+        // Si ya existe en Auth, Firebase lanzará una excepción automáticamente
+        try {
+            auth.createUserWithEmailAndPassword(email, pass).await()
+        } catch (e: Exception) {
+            if (e.message?.contains("already in use") == true) {
+                throw Exception("Este usuario ya está registrado en el sistema.")
+            } else {
+                throw e
+            }
         }
     }
 

@@ -15,7 +15,7 @@ class NotificationRepository {
 
     private val db = Firebase.firestore
 
-    // Email porque así se guarda usuarioId en Firestore
+    // El email es el que se usa como usuarioId en Firestore según tus capturas
     private val currentUserId: String?
         get() = FirebaseAuth.getInstance().currentUser?.email
 
@@ -39,8 +39,9 @@ class NotificationRepository {
             trySend(combinada)
         }
 
+        // CORREGIDO: "usuarioId" para coincidir con Firestore
         val listenerPersonal = db.collection("notificaciones")
-            .whereEqualTo("destinatarioId", userId)
+            .whereEqualTo("usuarioId", userId)
             .orderBy("fechaEnvioNotificacion", Query.Direction.DESCENDING)
             .addSnapshotListener { snap, _ ->
                 listaPersonal = snap?.documents?.mapNotNull { doc ->
@@ -50,8 +51,9 @@ class NotificationRepository {
                 emitir()
             }
 
+        // CORREGIDO: "usuarioId" para las globales
         val listenerGlobal = db.collection("notificaciones")
-            .whereEqualTo("destinatarioId", "GLOBAL")
+            .whereEqualTo("usuarioId", "GLOBAL")
             .orderBy("fechaEnvioNotificacion", Query.Direction.DESCENDING)
             .addSnapshotListener { snap, _ ->
                 listaGlobal = snap?.documents?.mapNotNull { doc ->
@@ -73,8 +75,9 @@ class NotificationRepository {
 
         val userId = currentUserId ?: return Pair(emptyList(), null)
 
+        // CORREGIDO: "usuarioId"
         var queryPersonal = db.collection("notificaciones")
-            .whereEqualTo("destinatarioId", userId)
+            .whereEqualTo("usuarioId", userId)
             .orderBy("fechaEnvioNotificacion", Query.Direction.DESCENDING)
             .limit(PAGE_SIZE)
 
@@ -82,8 +85,9 @@ class NotificationRepository {
             queryPersonal = queryPersonal.startAfter(lastVisible)
         }
 
+        // CORREGIDO: "usuarioId"
         val queryGlobal = db.collection("notificaciones")
-            .whereEqualTo("destinatarioId", "GLOBAL")
+            .whereEqualTo("usuarioId", "GLOBAL")
             .orderBy("fechaEnvioNotificacion", Query.Direction.DESCENDING)
             .limit(PAGE_SIZE)
 
@@ -103,7 +107,6 @@ class NotificationRepository {
         val combinada = (personal + global)
             .sortedByDescending { it.fechaEnvioNotificacion }
 
-        // 🔧 CORREGIDO — evita crash en scroll
         val nuevoLastVisible =
             if (snapPersonal.documents.isNotEmpty())
                 snapPersonal.documents.last()
@@ -125,16 +128,18 @@ class NotificationRepository {
 
         fun emitir() = trySend(countPersonal + countGlobal)
 
+        // CORREGIDO: "usuarioId"
         val l1 = db.collection("notificaciones")
-            .whereEqualTo("destinatarioId", userId)
+            .whereEqualTo("usuarioId", userId)
             .whereEqualTo("leido", false)
             .addSnapshotListener { snap, _ ->
                 countPersonal = snap?.size() ?: 0
                 emitir()
             }
 
+        // CORREGIDO: "usuarioId"
         val l2 = db.collection("notificaciones")
-            .whereEqualTo("destinatarioId", "GLOBAL")
+            .whereEqualTo("usuarioId", "GLOBAL")
             .whereEqualTo("leido", false)
             .addSnapshotListener { snap, _ ->
                 countGlobal = snap?.size() ?: 0
@@ -155,17 +160,18 @@ class NotificationRepository {
     }
 
     suspend fun marcarTodasComoLeidas() {
-
         val userId = currentUserId ?: return
 
+        // CORREGIDO: "usuarioId"
         val personales = db.collection("notificaciones")
-            .whereEqualTo("destinatarioId", userId)
+            .whereEqualTo("usuarioId", userId)
             .whereEqualTo("leido", false)
             .get()
             .await()
 
+        // CORREGIDO: "usuarioId"
         val globales = db.collection("notificaciones")
-            .whereEqualTo("destinatarioId", "GLOBAL")
+            .whereEqualTo("usuarioId", "GLOBAL")
             .whereEqualTo("leido", false)
             .get()
             .await()

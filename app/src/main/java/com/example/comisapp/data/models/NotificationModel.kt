@@ -7,8 +7,9 @@ data class NotificationModel(
     val titulo: String = "",
     val descripcion: String = "",
     val tipo: String = "",
-    val destinatarioId: String = "",
+    // CAMBIO CLAVE: Cambia 'destinatarioId' por 'usuarioId'
+    val usuarioId: String = "",
     val leido: Boolean = false,
-    val creditoId: String? = null,        // id del crédito relacionado
+    val creditoId: String? = null,
     val fechaEnvioNotificacion: Timestamp? = null
 )
