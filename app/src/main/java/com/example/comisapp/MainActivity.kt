@@ -13,6 +13,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,14 +41,18 @@ import com.example.comisapp.data.repository.ProductRepository
 import com.example.comisapp.data.repository.SettingRepository
 import com.example.comisapp.data.repository.UserRepository
 import com.example.comisapp.ui.screens.ProductDetailScreen
-import com.example.comisapp.ui.screens.ViewModels.CatalogViewModel
-import com.example.comisapp.ui.screens.ViewModels.HomeViewModel
 import com.example.comisapp.ui.screens.ViewModels.ProductDetailViewModel
 import com.example.comisapp.ui.screens.auth.AuthViewModel
 import com.example.comisapp.ui.screens.auth.ChangePasswordScreen
 import com.example.comisapp.data.repository.SuggestionRepository
 import com.example.comisapp.ui.screens.ViewModels.CreditDetailViewModel
+import com.example.comisapp.ui.screens.auth.RegisterScreen
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlin.jvm.java
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
@@ -76,11 +81,41 @@ class MainActivity : ComponentActivity() {
             ComisAppTheme {
                 val nav = rememberNavController()
                 val repo = remember { AuthRepository() }
+                val scope = rememberCoroutineScope()
                 val productRepo = remember { ProductRepository() }
                 val userRepo = remember { UserRepository() }
                 val creditRepo = remember { CreditRepository() }
                 val settingRepo = remember { SettingRepository() }
                 val suggestionRepo = remember { SuggestionRepository() }
+
+
+                // Este bloque se encarga de sacar al usuario si pasa a INACTIVO
+                val userEmail = FirebaseAuth.getInstance().currentUser?.email
+
+                if (userEmail != null) {
+                    LaunchedEffect(userEmail) {
+                        val docRef = FirebaseFirestore.getInstance()
+                            .collection("usuarios")
+                            .document(userEmail)
+
+                        docRef.addSnapshotListener { snapshot, e ->
+                            if (e != null) return@addSnapshotListener
+
+                            if (snapshot != null && snapshot.exists()) {
+                                val estado = snapshot.getString("estado")
+                                if (estado == "INACTIVO") {
+                                    scope.launch {
+                                        repo.logout()
+                                        nav.navigate("login") {
+
+                                            popUpTo(0) { inclusive = true }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 NavHost(
                     navController = nav,
@@ -125,6 +160,7 @@ class MainActivity : ComponentActivity() {
 
                     composable("login"){
                         LoginScreen(
+                            navController = nav,
                             onForgotPasswordClick = {
                                 nav.navigate("recovery")
                             },
@@ -134,6 +170,18 @@ class MainActivity : ComponentActivity() {
                                         inclusive = true
                                     }
                                 }
+                            }
+                        )
+                    }
+                    composable("register") {
+                        RegisterScreen(
+                            onRegisterSuccess = {
+                                nav.navigate("login") {
+                                    popUpTo("register") { inclusive = true }
+                                }
+                            },
+                            onBackToLogin = {
+                                nav.popBackStack()
                             }
                         )
                     }

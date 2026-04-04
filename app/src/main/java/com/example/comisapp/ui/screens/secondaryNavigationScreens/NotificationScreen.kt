@@ -19,13 +19,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.comisapp.data.models.NotificationModel
+import com.example.comisapp.data.models.ClaimModel
 import com.example.comisapp.data.repository.NotificationRepository
+import com.example.comisapp.data.repository.ClaimRepository
 import com.example.comisapp.ui.screens.ViewModels.NotificationViewModel
+import com.example.comisapp.ui.screens.ViewModels.ClaimViewModel
 import java.util.Calendar
 
 
@@ -33,11 +37,16 @@ import java.util.Calendar
 @Composable
 fun NotificationScreen(
     onBackClick: () -> Unit,
+    emailUsuario: String = "", // Parámetro para cargar reclamos
     viewModel: NotificationViewModel = viewModel(
         factory = NotificationViewModel.Factory(NotificationRepository())
+    ),
+    claimViewModel: ClaimViewModel = viewModel(
+        factory = ClaimViewModel.Factory(ClaimRepository())
     )
 ) {
     val notificaciones by viewModel.notificaciones.collectAsState()
+    val reclamos by claimViewModel.reclamos.collectAsState()
     val isLoading      by viewModel.isLoading.collectAsState()
     val hayMas         by viewModel.hayMas.collectAsState()
     val noLeidas       by viewModel.noLeidasCount.collectAsState()
@@ -45,6 +54,13 @@ fun NotificationScreen(
     val listState = rememberLazyListState()
 
     var cargandoScroll by remember { mutableStateOf(false) }
+
+    // Carga de reclamos al iniciar la pantalla
+    LaunchedEffect(Unit) {
+        if (emailUsuario.isNotEmpty()) {
+            claimViewModel.cargarReclamos(emailUsuario)
+        }
+    }
 
     LaunchedEffect(listState) {
 
@@ -130,7 +146,17 @@ fun NotificationScreen(
 //                SupportCard()
 //            }
 
-            if (!isLoading && notificaciones.isEmpty()) {
+            if (reclamos.isNotEmpty()) {
+                item {
+                    Spacer(Modifier.height(20.dp))
+                    SectionTitle("ESTADO DE RECLAMOS")
+                }
+                items(reclamos) { reclamo ->
+                    ItemClaimCard(reclamo)
+                }
+            }
+
+            if (!isLoading && notificaciones.isEmpty() && reclamos.isEmpty()) {
                 item {
                     Box(
                         modifier = Modifier
@@ -225,38 +251,6 @@ fun NotificationScreen(
     }
 }
 
-//@Composable
-//fun SupportCard() {
-//    Card(
-//        shape  = RoundedCornerShape(16.dp),
-//        colors = CardDefaults.cardColors(containerColor = Color(0xFF0D1B2A)),
-//        modifier = Modifier.fillMaxWidth()
-//    ) {
-//        Column(modifier = Modifier.padding(16.dp)) {
-//            Text("SOPORTE TÉCNICO", color = Color.LightGray, fontSize = 12.sp)
-//            Spacer(Modifier.height(8.dp))
-//            Text(
-//                "¿Necesitas ayuda con tus solicitudes?",
-//                color      = Color.White,
-//                fontSize   = 16.sp,
-//                fontWeight = FontWeight.Bold
-//            )
-//            Spacer(Modifier.height(12.dp))
-//            Button(
-//                onClick = { },
-//                colors  = ButtonDefaults.buttonColors(containerColor = Color.White)
-//            ) {
-//                Text(
-//                    "Contactar Soporte",
-//                    color      = Color.Black,
-//                    fontWeight = FontWeight.ExtraBold,
-//                    fontSize   = 15.sp
-//                )
-//            }
-//        }
-//    }
-//}
-
 @Composable
 fun SectionTitle(title: String) {
     Text(
@@ -282,7 +276,7 @@ fun NotificationCard(
         "credito_rechazado", "credito_rechazada" -> "Su solicitud de crédito fue rechazada"
         "credito_pendiente" -> "Su solicitud de crédito fue recibida y está en revisión"
         // --- Casos de Reclamos ---
-        "reclamo_aprobado" -> notif.descripcion // El mensaje viene del index.js
+        "reclamo_aprobado" -> notif.descripcion
         "reclamo_rechazado" -> notif.descripcion
         "reclamo_pendiente" -> notif.descripcion
         else -> notif.descripcion
@@ -300,35 +294,30 @@ fun NotificationCard(
         else -> notif.titulo
     }
 
-    // 3. Color del Borde (Morado para aprobados, Rojo para rechazados)
     val borderColor = when (estado) {
         "credito_aprobado", "credito_aprobada", "reclamo_aprobado" -> Color(0xFFDDD6FE)
         "credito_rechazado", "credito_rechazada", "reclamo_rechazado" -> Color(0xFFFFCDD2)
         else -> Color(0xFFE5E7EB)
     }
 
-    // 4. Color de fondo del Icono
     val iconBoxColor = when (estado) {
         "credito_aprobado", "credito_aprobada", "reclamo_aprobado" -> Color(0xFFEBE2FF)
         "credito_rechazado", "credito_rechazada", "reclamo_rechazado" -> Color(0xFFFFEBEE)
         else -> Color(0xFFF3F4F6)
     }
 
-    // 5. Color del Icono
     val iconTint = when (estado) {
         "credito_aprobado", "credito_aprobada", "reclamo_aprobado" -> purpleTheme
         "credito_rechazado", "credito_rechazada", "reclamo_rechazado" -> Color(0xFFE53935)
         else -> Color(0xFF9CA3AF)
     }
 
-    // 6. Selección del Icono (Check, Equis o Reloj)
     val iconoMostrado = when (estado) {
         "credito_aprobado", "credito_aprobada", "reclamo_aprobado" -> Icons.Default.CheckCircle
         "credito_rechazado", "credito_rechazada", "reclamo_rechazado" -> Icons.Default.Close
         else -> Icons.Default.AccessTime
     }
 
-    // ... resto del código del formato de tiempo ...
     val time = remember(notif.fechaEnvioNotificacion) {
         val date = notif.fechaEnvioNotificacion?.toDate() ?: return@remember ""
         val now = java.util.Calendar.getInstance()
@@ -409,6 +398,63 @@ fun NotificationCard(
                         fontSize = 14.sp,
                         lineHeight = 20.sp
                     )
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
+fun ItemClaimCard(reclamo: ClaimModel) {
+    val esAprobado = reclamo.estado == "Aprobado"
+    val purpleTheme = Color(0xFF673AB7)
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (esAprobado) Color(0xFFF5F3FF) else Color.White
+        ),
+        border = BorderStroke(1.dp, if (esAprobado) Color(0xFFDDD6FE) else Color(0xFFE5E7EB)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp, vertical = 6.dp),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Row(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .background(
+                        if (esAprobado) Color(0xFFEBE2FF) else Color(0xFFF3F4F6),
+                        RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (esAprobado) Icons.Default.CheckCircle else Icons.Default.AccessTime,
+                    contentDescription = null,
+                    tint = if (esAprobado) purpleTheme else Color.Gray,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Spacer(Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        text = reclamo.asunto,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 15.sp,
+                        color = Color(0xFF111827)
+                    )
+                    Text("Reclamo", fontSize = 10.sp, color = purpleTheme, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = if (!reclamo.respuesta.isNullOrEmpty()) reclamo.respuesta!! else reclamo.descripcion,
+                    style = TextStyle(color = Color(0xFF4B5563), fontSize = 14.sp, lineHeight = 20.sp)
                 )
             }
         }

@@ -94,13 +94,11 @@ class NotificationViewModel(
         if (lastVisible == null) return
 
         estaCargando = true
+        _isLoading.value = true // Lo pasamos a true ANTES del launch para que la UI responda ya
 
         viewModelScope.launch {
 
             try {
-
-                _isLoading.value = true
-
                 val (lista, ultimo) =
                     repository.getNotificacionesPaginadas(
                         lastVisible
@@ -123,10 +121,10 @@ class NotificationViewModel(
                     }
 
                     lastVisible = ultimo
+                    _hayMas.value = ultimo != null
+                } else {
+                    _hayMas.value = false
                 }
-
-
-                _hayMas.value = ultimo != null
 
             } catch (e: Exception) {
 
