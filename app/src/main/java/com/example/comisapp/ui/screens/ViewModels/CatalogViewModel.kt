@@ -13,13 +13,16 @@ import com.example.comisapp.data.repository.CategoryRepository
 import com.example.comisapp.data.repository.ProductRepository
 import com.example.comisapp.ui.PaginationSource.ProductPagination
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
+
 
 class CatalogViewModel(
     private val categoryRepo: CategoryRepository,
@@ -38,7 +41,10 @@ class CatalogViewModel(
     private val _suggestions = MutableStateFlow<List<String>>(emptyList())
     val suggestions: StateFlow<List<String>> = _suggestions
 
-    private val _searchQuery = MutableStateFlow<String?>(null)
+    private val _searchQuery = MutableSharedFlow<String?>(
+        replay = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
 
     private var searchJob: Job? = null
     fun onSearchQueryChanged(query: String) {
@@ -48,19 +54,26 @@ class CatalogViewModel(
                 _suggestions.value = emptyList()
             } else {
                 delay(300)
-                _suggestions.value = productosRepo.getSuggestions(query)
+                _suggestions.value = productosRepo.getSuggestions(
+                    query = query,
+                    categoriaId = _categoriaSeleccionada.value
+                )
             }
         }
     }
 
     fun applySearch(query: String) {
         _suggestions.value = emptyList()
-        _searchQuery.value = query.ifBlank { null }
+        viewModelScope.launch {
+            _searchQuery.emit(query.ifBlank { null })
+        }
     }
 
     fun clearSearch() {
-        _searchQuery.value = null
         _suggestions.value = emptyList()
+        viewModelScope.launch {
+            _searchQuery.emit(null)
+        }
     }
 
     val productsFlow: Flow<PagingData<ProductModel>> =
@@ -82,8 +95,8 @@ class CatalogViewModel(
                         searchQuery = searchQuery
                     )
                 }
-            ).flow.cachedIn(viewModelScope)
-        }
+            ).flow
+        }.cachedIn(viewModelScope)
 
     fun inicializarCategoria(categoriaId: String?) {
         _categoriaSeleccionada.value = categoriaId
@@ -107,6 +120,9 @@ class CatalogViewModel(
 
     init {
         cargarCategorias()
+        viewModelScope.launch {
+            _searchQuery.emit(null)
+        }
     }
 
     companion object {

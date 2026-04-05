@@ -1,6 +1,8 @@
 package com.example.comisapp.ui.screens.components
 
 
+import LempiraHelper.toLempira
+import LempiraHelper.toLempiraFormal
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -113,7 +115,7 @@ fun ProductCard(
 
                 if(!isFavoriteUi){
                     Text(
-                        text = product.precioContado.toString() + " L.",
+                        text = product.precioContado?.toLempira() ?:"",
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Medium

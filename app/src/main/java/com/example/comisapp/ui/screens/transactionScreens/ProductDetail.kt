@@ -1,5 +1,6 @@
 package com.example.comisapp.ui.screens
 
+import LempiraHelper.toLempira
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -29,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
@@ -306,7 +308,7 @@ private fun MainContent(
                 Spacer(Modifier.height(4.dp))
                 Text(product.nombre?:"", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = BodyText)
                 Spacer(Modifier.height(4.dp))
-                Text(product.precioContado.toString(), fontSize = 18.sp, fontWeight = FontWeight.Medium, color = BodyText)
+                Text(product.precioContado?.toLempira()?:"", fontSize = 18.sp, fontWeight = FontWeight.Medium, color = BodyText)
             }
 
             Spacer(Modifier.height(16.dp))
@@ -340,7 +342,72 @@ private fun MainContent(
             }
 
             Spacer(Modifier.height(20.dp))
-            HorizontalDivider(color = DividerColor)
+            HorizontalDivider(color = DividerColor.copy(alpha = 0.3f))
+            Column(modifier = Modifier.fillMaxWidth()) {
+                val rating = product.rate ?: 0.0
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showReviewsSheet = true }
+                        .padding(horizontal = 16.dp, vertical = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+
+                        Text(
+                            text = "Reseñas",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = BodyText
+                        )
+                    }
+                    if(rating != 0.0){
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+
+                            Row(modifier = Modifier.padding(end = 8.dp)) {
+                                repeat(5) { index ->
+                                    Icon(
+                                        imageVector = if (index < rating.toInt()) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                                        contentDescription = null,
+                                        tint = if (index < rating.toInt()) TextPurple else DividerColor,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = rating.toString(),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = BodyText
+                            )
+
+                            Spacer(modifier = Modifier.width(4.dp))
+
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = SubtleText,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }else{
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "No hay reseñas para este producto",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Normal,
+                                fontStyle = FontStyle.Italic,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+
+
+                }
+                HorizontalDivider(color = DividerColor.copy(alpha = 0.3f))
+            }
 
             // Description
             Column(modifier = Modifier
@@ -351,7 +418,7 @@ private fun MainContent(
                 Text(product.descripcion?:"", fontSize = 14.sp, color = SubtleText, lineHeight = 22.sp)
             }
 
-            HorizontalDivider(color = DividerColor)
+            HorizontalDivider(color = DividerColor.copy(alpha = 0.3f))
             Spacer(Modifier.height(8.dp))
 
             Column(modifier = Modifier
@@ -362,8 +429,9 @@ private fun MainContent(
                     fontWeight = FontWeight.Bold, letterSpacing = 1.sp, color = BodyText
                 )
                 Spacer(Modifier.height(10.dp))
-                Text("Comisariato Cucayagua garantiza la calidad de sus " +
-                        "productos por un periodo de ${product.garantiaMeses} mes(es) " +
+                Text("CrediFlow garantiza la calidad de sus " +
+                        "productos por un periodo de " +
+                        if(product.garantiaMeses != null) " ${product.garantiaMeses} mes(es) " else "${product.garantiaDias} días "+
                         "contra defectos de fábrica",
                     fontSize = 14.sp, color = SubtleText, lineHeight = 22.sp)
                 Spacer(Modifier.height(10.dp))
@@ -391,54 +459,12 @@ private fun MainContent(
                 )
             }
 
-            HorizontalDivider(color = DividerColor)
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        showReviewsSheet = true
-                    }
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Reseñas", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = BodyText)
-            }
-
             Spacer(Modifier.height(8.dp))
         }
     }
 
 
 }
-
-@Composable
-private fun BasicTextFieldHint(
-    value: String,
-    onValueChange: (String) -> Unit,
-    hint: String
-) {
-    Box(contentAlignment = Alignment.CenterStart) {
-        if (value.isEmpty()) {
-            Text(hint, fontSize = 14.sp, color = SubtleText)
-        }
-        androidx.compose.foundation.text.BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            textStyle = androidx.compose.ui.text.TextStyle(
-                fontSize = 14.sp,
-                color = BodyText
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 10.dp)
-        )
-    }
-}
-
-
-
 @Composable
 private fun BulletSection(title: String, text: String) {
     Column {

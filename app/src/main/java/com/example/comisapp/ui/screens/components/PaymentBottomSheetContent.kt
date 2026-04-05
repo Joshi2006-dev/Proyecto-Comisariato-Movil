@@ -1,5 +1,6 @@
 package com.example.comisapp.ui.screens.components
 
+import LempiraHelper.toLempira
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -205,15 +206,11 @@ fun PaymentBottomSheetContent(
                 val amount = if (paymentMode == PaymentMode.INSTALLMENTS) monthlyPayment else totalPrice
                 val amountStr = "%.2f".format(amount).replace(".", ",")
                 Text(
-                    text = buildAnnotatedString {
-                        withStyle(SpanStyle(fontSize = 28.sp, fontWeight = FontWeight.Bold, color = BodyText)) {
-                            append(amountStr)
-                        }
-                        append("  ")
-                        withStyle(SpanStyle(fontSize = 13.sp, color = SubtleText, fontWeight = FontWeight.Normal)) {
-                            append("LPS")
-                        }
-                    }
+                    text = amount.toLempira(),
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = BodyText
+
                 )
             }
         }

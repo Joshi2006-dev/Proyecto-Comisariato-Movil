@@ -12,7 +12,7 @@ class CategoryRepository {
 
     suspend fun getAllCategorias(): List<CategoryModel> {
         val result = db.collection("categorias")
-            .whereEqualTo("estado", "Activo")
+            .whereEqualTo("estado", "ACTIVO")
             .get()
             .await()
         return result.documents.mapNotNull {
@@ -25,7 +25,7 @@ class CategoryRepository {
     suspend fun getCategorias(limit: Int): List<CategoryModel>{
 
         var query = db.collection("categorias")
-            .whereEqualTo("estado", "Activo")
+            .whereEqualTo("estado", "ACTIVO")
             .limit(limit.toLong())
 
         lastDocument?.let {

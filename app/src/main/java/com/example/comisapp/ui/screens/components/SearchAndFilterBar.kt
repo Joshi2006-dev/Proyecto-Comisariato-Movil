@@ -44,9 +44,14 @@ fun SearchAndFilterBar(
     onQueryChange: (String) -> Unit,
     onSearch: (String) -> Unit,
     suggestions: List<String>,
+    onClear: () -> Unit,
     onSuggestionSelected: (String) -> Unit,
 ) {
-    val showSuggestions = query.isNotEmpty() && suggestions.isNotEmpty()
+    var isSuggestionSelected by remember { mutableStateOf(false) }
+
+    val showSuggestions = query.isNotEmpty()
+            && suggestions.isNotEmpty()
+            && !isSuggestionSelected
 
     Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
         Row(
@@ -74,7 +79,10 @@ fun SearchAndFilterBar(
                     Spacer(modifier = Modifier.width(8.dp))
                     BasicTextField(
                         value = query,
-                        onValueChange = { onQueryChange(it) },
+                        onValueChange = {
+                            isSuggestionSelected = false
+                            onQueryChange(it)
+                        },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                         keyboardActions = KeyboardActions(
@@ -94,7 +102,11 @@ fun SearchAndFilterBar(
                             tint = Color.Gray,
                             modifier = Modifier
                                 .size(18.dp)
-                                .clickable { onQueryChange("") }
+                                .clickable {
+                                    isSuggestionSelected = false
+                                    onQueryChange("")
+                                    onClear()
+                                }
                         )
                     }
                 }
@@ -115,7 +127,10 @@ fun SearchAndFilterBar(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { onSuggestionSelected(name) }
+                                .clickable {
+                                    isSuggestionSelected = true
+                                    onSuggestionSelected(name)
+                                }
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
