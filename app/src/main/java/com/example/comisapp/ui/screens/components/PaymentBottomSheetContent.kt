@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -38,8 +39,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentActivity
 import com.example.comisapp.data.models.ProductModel
 import com.example.comisapp.data.models.settings.PlazoModel
+import com.example.comisapp.ui.screens.secondaryNavigationScreens.ejecutarBiometria
 import com.example.comisapp.ui.theme.TextPurple
 
 val BrandPurple  = TextPurple
@@ -71,6 +74,18 @@ fun PaymentBottomSheetContent(
     isEditMode: Boolean = false,
     onConfirm: () -> Unit
 ) {
+    val context = LocalContext.current
+    val activity = androidx.compose.runtime.remember(context) {
+        var currentContext = context
+        // Buscamos la FragmentActivity pelando las capas de ContextWrapper
+        while (currentContext is android.content.ContextWrapper) {
+            if (currentContext is FragmentActivity) break
+            currentContext = currentContext.baseContext
+        }
+        currentContext as? FragmentActivity
+    }
+
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -105,7 +120,7 @@ fun PaymentBottomSheetContent(
                         strokeWidth = 2.dp
                     )
                 }
-            }else{
+            } else {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -124,7 +139,11 @@ fun PaymentBottomSheetContent(
                             fontSize = 14.sp,
                             color = if (selectedMonths == 0) SubtleText else BodyText
                         )
-                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = SubtleText)
+                        Icon(
+                            Icons.Default.KeyboardArrowDown,
+                            contentDescription = null,
+                            tint = SubtleText
+                        )
                     }
                     DropdownMenu(
                         expanded = monthsMenuExpanded,
@@ -203,7 +222,8 @@ fun PaymentBottomSheetContent(
                     fontSize = 13.sp, color = SubtleText
                 )
                 Spacer(Modifier.height(4.dp))
-                val amount = if (paymentMode == PaymentMode.INSTALLMENTS) monthlyPayment else totalPrice
+                val amount =
+                    if (paymentMode == PaymentMode.INSTALLMENTS) monthlyPayment else totalPrice
                 val amountStr = "%.2f".format(amount).replace(".", ",")
                 Text(
                     text = amount.toLempira(),
@@ -254,8 +274,23 @@ fun PaymentBottomSheetContent(
                 CircularProgressIndicator(color = BrandPurple)
             }
         } else {
-            ButtonComponent(text = "CONFIRMAR SOLICITUD", onClick = onConfirm)
-        }    }
+            ButtonComponent(
+                text = "CONFIRMAR SOLICITUD",
+                onClick = {
+                    if (activity != null) {
+                        // Lanzamos la biometría
+                        ejecutarBiometria(activity) {
+                            // Si la huella es correcta, llamamos a onConfirm()
+                            onConfirm()
+                        }
+                    } else {
+                        // Si activity sigue siendo null (no debería), confirmamos directo
+                        onConfirm()
+                    }
+                }
+            )
+        }
+    }
 }
 
 @Composable
