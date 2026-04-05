@@ -13,5 +13,8 @@ data class ProductModel(
     val precioContado: Double? = 0.0,
     val precioCredito: Double? = 0.0,
     val stock: Int? = 0,
-    val garantiaMeses: Int? = 0
+    val garantiaMeses: Int? = 0,
+    val garantiaDias: Int? = 0,
+    val rate: Double? = 0.0,
+
 )

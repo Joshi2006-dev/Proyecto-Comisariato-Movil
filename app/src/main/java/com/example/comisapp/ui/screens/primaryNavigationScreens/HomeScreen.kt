@@ -126,7 +126,6 @@ fun HomeScreen(
         },
 
         ){ paddingValues ->
-//            val favoriteStates = remember { mutableStateListOf(*Array(10) { false }) }
 
         Column(
             modifier = Modifier.padding(paddingValues).fillMaxSize().background(Color.White)
@@ -320,14 +319,14 @@ fun AppHeader(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Comis",
+                    text = "Credi",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.ExtraBold,
                         color = Color.Black
                     )
                 )
                 Text(
-                    text = "App",
+                    text = "Flow",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.ExtraBold,
                         color = TextPurple

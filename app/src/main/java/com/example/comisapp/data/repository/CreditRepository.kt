@@ -33,6 +33,7 @@ class CreditRepository {
                 "plazoMeses" to credit.plazoMeses,
                 "productoId" to credit.productoId,
                 "plazoGarantia" to credit.plazoGarantia,
+                "plazoGarantiaDia" to credit.plazoGarantiaDia,
                 "totalCredito" to credit.totalCredito,
                 "usuarioId" to credit.usuarioId,
                 "usuario" to credit.usuario,

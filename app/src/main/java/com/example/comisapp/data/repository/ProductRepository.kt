@@ -27,42 +27,58 @@ class ProductRepository {
         searchQuery: String? = null
     ): PageResult<ProductModel> {
 
+        // --- MODO BÚSQUEDA ---
+        if (!searchQuery.isNullOrBlank()) {
+            val q = searchQuery.trim().lowercase()
+
+            var searchBase = db.collection("productos")
+                .whereEqualTo("activo", true)
+                .orderBy("nombreNormalizado")
+                .startAt(q)
+                .endAt(q + "\uf8ff")
+                .limit((limit * 3).toLong()) // pedir más por si hay filtro de categoría
+
+            val result = searchBase.get().await()
+
+            val productos = result.documents
+                .mapNotNull { doc ->
+                    doc.toObject(ProductModel::class.java)?.copy(id = doc.id)
+                }
+                .filter { CategoryId == null || it.categoriaId == CategoryId }
+                .take(limit) // recortar al límite real
+
+            return PageResult(
+                data = productos,
+                lastDocument = null // sin paginación en modo búsqueda por ahora
+            )
+        }
+
+        // --- MODO NORMAL (sin búsqueda) ---
         var query = db.collection("productos")
             .whereEqualTo("activo", true)
 
         if (CategoryId != null) query = query.whereEqualTo("categoriaId", CategoryId)
 
-        if (!searchQuery.isNullOrBlank()) {
-            // Capitaliza igual que como están guardados los nombres
-            val q = searchQuery.replaceFirstChar { it.uppercase() }
-            query = query
-                .orderBy("nombre")
-                .startAt(q)
-                .endAt(q + "\uf8ff")
-        } else {
-            query = when (filter) {
-                "home" -> query.orderBy("fechaRegistro", Query.Direction.DESCENDING)
-                "catalogo" -> query
-                    .orderBy("rate", Query.Direction.DESCENDING)
-                    .orderBy("fechaRegistro", Query.Direction.DESCENDING)
-                else -> query.orderBy("fechaRegistro", Query.Direction.DESCENDING)
-            }
+        query = when (filter) {
+            "home" -> query.orderBy("fechaRegistro", Query.Direction.DESCENDING)
+            "catalogo" -> query
+                .orderBy("rate", Query.Direction.DESCENDING)
+                .orderBy("fechaRegistro", Query.Direction.DESCENDING)
+            else -> query.orderBy("fechaRegistro", Query.Direction.DESCENDING)
         }
 
         query = query.limit(limit.toLong())
 
-        if (searchQuery.isNullOrBlank()) {
-            lastDocument?.let {
-                when (filter) {
-                    "catalogo" -> {
-                        val rate = it.getDouble("rate")
-                        val fechaRegistro = it.getTimestamp("fechaRegistro")
-                        query = query.startAfter(rate, fechaRegistro)
-                    }
-                    else -> {
-                        val fechaRegistro = it.getTimestamp("fechaRegistro")
-                        query = query.startAfter(fechaRegistro)
-                    }
+        lastDocument?.let {
+            query = when (filter) {
+                "catalogo" -> {
+                    val rate = it.getDouble("rate")
+                    val fechaRegistro = it.getTimestamp("fechaRegistro")
+                    query.startAfter(rate, fechaRegistro)
+                }
+                else -> {
+                    val fechaRegistro = it.getTimestamp("fechaRegistro")
+                    query.startAfter(fechaRegistro)
                 }
             }
         }
@@ -79,40 +95,32 @@ class ProductRepository {
         )
     }
 
-    suspend fun getSuggestions(query: String, limit: Int = 6): List<String> {
+    suspend fun getSuggestions(query: String, categoriaId: String? = null): List<String> {
         return try {
-            val qLower = query.replaceFirstChar { it.lowercase() }
-            val qUpper = query.replaceFirstChar { it.uppercase() }
+            val q = query.trim().lowercase()
 
-            val lowerResult = db.collection("productos")
+            var firestoreQuery = db.collection("productos")
                 .whereEqualTo("activo", true)
-                .orderBy("nombre")
-                .startAt(qLower)
-                .endAt(qLower + "\uf8ff")
-                .limit(limit.toLong())
+                .orderBy("nombreNormalizado")
+                .startAt(q)
+                .endAt(q + "\uf8ff")
+
+            if (categoriaId != null) {
+                firestoreQuery = firestoreQuery.whereEqualTo("categoriaId", categoriaId)
+            }
+
+            firestoreQuery
+                .limit(5)
                 .get()
                 .await()
-
-            val upperResult = db.collection("productos")
-                .whereEqualTo("activo", true)
-                .orderBy("nombre")
-                .startAt(qUpper)
-                .endAt(qUpper + "\uf8ff")
-                .limit(limit.toLong())
-                .get()
-                .await()
-
-            (lowerResult.documents + upperResult.documents)
-                .mapNotNull { it.getString("nombre") }
-                .distinct()
-                .take(limit)
+                .documents
+                .mapNotNull { doc -> doc.getString("nombre") }
 
         } catch (e: Exception) {
             Log.e("Suggestions", "Error: ${e.message}")
             emptyList()
         }
     }
-
     suspend fun getProductoById(id: String): ProductModel? {
         return try {
             val doc = db.collection("productos").document(id).get().await()

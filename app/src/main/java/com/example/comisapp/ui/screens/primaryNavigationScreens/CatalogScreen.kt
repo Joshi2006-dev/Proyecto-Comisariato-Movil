@@ -83,6 +83,7 @@ fun CatalogScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var searchQuery by remember { mutableStateOf("") }
     var selectedTab by remember { mutableIntStateOf(0) }
+    var isSelectingSuggestion by remember { mutableStateOf(false) }
 
 
     val categories by viewModel.categorias.collectAsState()
@@ -129,15 +130,24 @@ fun CatalogScreen(
                     query = searchQuery,
                     onQueryChange = {
                         searchQuery = it
-                        viewModel.onSearchQueryChanged(it)
-                        if (it.isBlank()) viewModel.clearSearch()  // ← esto es todo
+                        if (isSelectingSuggestion) {
+                            isSelectingSuggestion = false
+                        } else {
+                            viewModel.onSearchQueryChanged(it)
+                            if (it.isBlank()) viewModel.clearSearch()
+                        }
                     },
                     onSearch = { viewModel.applySearch(it) },
                     suggestions = suggestions,
                     onSuggestionSelected = { name ->
+                        isSelectingSuggestion = true
                         searchQuery = name
                         viewModel.applySearch(name)
-                    }
+                    },
+                    onClear = {
+                        searchQuery = ""
+                        viewModel.clearSearch()
+                    },
                 )
 
                 CatalogTabs(
