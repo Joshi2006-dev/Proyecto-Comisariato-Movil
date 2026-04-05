@@ -63,6 +63,7 @@ class MainActivity : ComponentActivity() {
         // ── Canal de notificaciones ───────────────────────────────────
         // Usa el mismo channelId "notificaciones" que ya tienes en
         // MyFirebaseMessagingService
+        // No me dan los commits pero ahora si van a dar
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val manager = getSystemService(NotificationManager::class.java)
             val canal = NotificationChannel(
