@@ -1,19 +1,22 @@
 package com.example.comisapp.ui.screens.secondaryNavigationScreens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.HeadsetMic
 import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
+import androidx.compose.material.icons.filled.HeadsetMic
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -21,10 +24,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.comisapp.data.repository.AyudaRepository
 import com.example.comisapp.ui.screens.ViewModels.HelpCenterViewModel
-//Importaciones para whatsapp
-import android.content.Intent
-import android.net.Uri
-import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +33,7 @@ fun HelpCenterScreen(
         factory = HelpCenterViewModel.Factory(AyudaRepository())
     )
 ) {
+    // 1. Escuchamos los cambios de Firebase a través del ViewModel
     val ayudas by helpCenterViewModel.ayudas.collectAsState()
     val context = LocalContext.current
 
@@ -74,7 +74,6 @@ fun HelpCenterScreen(
         ) {
 
             item {
-
                 Spacer(modifier = Modifier.height(40.dp))
 
                 Icon(
@@ -110,7 +109,7 @@ fun HelpCenterScreen(
             }
 
             item {
-
+                // Card Gris de Preguntas Frecuentes
                 Card(
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(
@@ -132,45 +131,15 @@ fun HelpCenterScreen(
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // Obtiene todo el texto del campo explicacion
-                        val textoCompleto =
-                            ayudas.firstOrNull()?.explicacion ?: ""
-
-                        // Divide el texto en respuestas usando línea en blanco
-                        val respuestas =
-                            textoCompleto.split("\n\n")
-
-
-                        val respuestaCredito =
-                            respuestas.getOrNull(0) ?: ""
-
-
-                        val respuestaAprobacion =
-                            respuestas.getOrNull(1) ?: ""
-
-
-                        val respuestaMetodoPago =
-                            respuestas.getOrNull(2) ?: ""
-
-
-                        FAQItem(
-                            question = "¿Cómo solicito un nuevo crédito?",
-                            answer = respuestaCredito
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        FAQItem(
-                            question = "¿Cuál es el tiempo de aprobación?",
-                            answer = respuestaAprobacion
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        FAQItem(
-                            question = "¿Cómo cambio mi método de pago?",
-                            answer = respuestaMetodoPago
-                        )
+                        // --- LÓGICA DINÁMICA ---
+                        // Aquí se generan los FAQItems automáticamente según Firestore
+                        ayudas.forEach { ayuda ->
+                            FAQItem(
+                                question = ayuda.titulo,
+                                answer = ayuda.explicacion
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
                     }
                 }
 
@@ -178,7 +147,7 @@ fun HelpCenterScreen(
             }
 
             item {
-
+                // Card Negro de Soporte
                 Card(
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.Black),
@@ -254,7 +223,6 @@ fun FAQItem(
     question: String,
     answer: String
 ) {
-
     var expanded by remember { mutableStateOf(false) }
 
     Card(
@@ -263,22 +231,17 @@ fun FAQItem(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                expanded = !expanded
-            }
+            .clickable { expanded = !expanded }
     ) {
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(20.dp)
         ) {
-
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-
                 Text(
                     text = question,
                     modifier = Modifier.weight(1f),
@@ -296,9 +259,7 @@ fun FAQItem(
             }
 
             if (expanded) {
-
                 Spacer(modifier = Modifier.height(12.dp))
-
                 Text(
                     text = answer,
                     fontSize = 14.sp,
