@@ -91,5 +91,6 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging-ktx")
     implementation("androidx.navigation:navigation-compose:2.8.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("androidx.biometric:biometric:1.2.0-alpha05")
 
 }
