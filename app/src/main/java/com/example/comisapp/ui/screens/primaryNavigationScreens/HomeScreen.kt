@@ -1,22 +1,12 @@
 package com.example.comisapp.ui.screens.primaryNavigationScreens
-
-
+// IMPORTANTE: Solo dejamos el AlertDialog de Material3
+import android.Manifest
+import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -28,26 +18,8 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.ManageAccounts
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.* // Aquí ya viene el AlertDialog de Compose
 import androidx.compose.runtime.*
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -78,11 +50,10 @@ import com.example.comisapp.ui.screens.components.ProductCardSkeleton
 import com.example.comisapp.ui.theme.CardBorderColor
 import com.example.comisapp.ui.theme.TextPurple
 
-
 data class ProfileMenuItem(
     val icon: ImageVector,
     val label: String,
-    val onClick: ()-> Unit,
+    val onClick: () -> Unit,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,26 +61,46 @@ data class ProfileMenuItem(
 fun HomeScreen(
     viewModel: HomeViewModel,
     onGoDetail: (String) -> Unit,
-    onNavigateToCuenta: ()->Unit = {},
-    onLogOut: ()-> Unit = {},
+    onNavigateToCuenta: () -> Unit = {},
+    onLogOut: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
     onGoCategoria: (String) -> Unit = {}
-){
+) {
     val categoriasItems = viewModel.categoriesFlow.collectAsLazyPagingItems()
     val productosItems = viewModel.productsFlow.collectAsLazyPagingItems()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-    val profileUrl= viewModel.currentUser?.fotoUrl
-
+    val profileUrl = viewModel.currentUser?.fotoUrl
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     val isLoadingCategories = categoriasItems.loadState.refresh is LoadState.Loading
     val isLoadingProducts = productosItems.loadState.refresh is LoadState.Loading
-
 
     val notificationViewModel: NotificationViewModel = viewModel(
         factory = NotificationViewModel.Factory(NotificationRepository())
     )
     val noLeidas by notificationViewModel.noLeidasCount.collectAsState()
+
+    // --- LÓGICA DE PERMISOS ---
+    var showRationale by remember { mutableStateOf(false) }
+
+    val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) println("Permiso concedido") else println("Permiso denegado")
+    }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val status = androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            )
+            if (status != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                showRationale = true
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -121,180 +112,133 @@ fun HomeScreen(
                 scrollBehavior = scrollBehavior,
                 onNotificationsClick = onNotificationsClick,
                 unreadCount = noLeidas
-
             )
         },
-
-        ){ paddingValues ->
-
+    ) { paddingValues ->
         Column(
             modifier = Modifier.padding(paddingValues).fillMaxSize().background(Color.White)
-
-        ){
-
+        ) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 contentPadding = PaddingValues(8.dp),
                 verticalArrangement = Arrangement.spacedBy(3.dp),
                 horizontalArrangement = Arrangement.spacedBy(3.dp),
-                modifier = Modifier.padding(bottom = 60.dp  )
-            ){
-                item(span = {GridItemSpan(2)}) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                modifier = Modifier.padding(bottom = 60.dp)
+            ) {
+                item(span = { GridItemSpan(2) }) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
                             text = "QUIZAS PODRÍA INTERESARTE",
                             style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 11.sp,
-                                letterSpacing = 1.1.sp,
-                                color = Color(0xFF474747)
+                                fontWeight = FontWeight.Medium, fontSize = 11.sp, letterSpacing = 1.1.sp, color = Color(0xFF474747)
                             ),
                         )
                         Spacer(modifier = Modifier.height(5.dp))
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color.White
-                            ),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
                             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                        ){
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(300.dp)
-                                    .padding(5.dp)
-                            ) {
+                        ) {
+                            Box(modifier = Modifier.fillMaxWidth().height(300.dp).padding(5.dp)) {
                                 Image(
                                     painter = painterResource(R.drawable.img_mas_destacado),
                                     contentDescription = "destacado",
                                     contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(8.dp))
+                                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
                                 )
-
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.BottomStart)
-                                        .padding(25.dp)
-                                ){
-                                    Column(
-                                    ) {
+                                Box(modifier = Modifier.align(Alignment.BottomStart).padding(25.dp)) {
+                                    Column {
                                         Text(
                                             text = "Lo Más \nDestacado",
                                             style = MaterialTheme.typography.labelSmall.copy(
-                                                color = Color.White,
-                                                fontSize = 36.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                lineHeight = 40.sp,
-                                                letterSpacing = -1.8.sp
+                                                color = Color.White, fontSize = 36.sp, fontWeight = FontWeight.Bold, lineHeight = 40.sp, letterSpacing = -1.8.sp
                                             ),
-                                            maxLines = 2,
-                                            overflow = TextOverflow.Ellipsis
+                                            maxLines = 2, overflow = TextOverflow.Ellipsis
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
                                             text = "Conoce lo productos mas solicitados por nuestros usuarios",
                                             style = MaterialTheme.typography.labelSmall.copy(
-                                                color = Color.White.copy(alpha = 0.6f),
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.Normal,
-                                                lineHeight = 20.sp,
-                                                letterSpacing = 0.sp
+                                                color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp, fontWeight = FontWeight.Normal, lineHeight = 20.sp, letterSpacing = 0.sp
                                             ),
-                                            maxLines = 2,
-                                            overflow = TextOverflow.Ellipsis
+                                            maxLines = 2, overflow = TextOverflow.Ellipsis
                                         )
-
                                     }
-
                                 }
-
                             }
                             Spacer(modifier = Modifier.height(25.dp))
                             Text(
                                 text = "CATEGORÍAS SUGERIDAS",
                                 style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 11.sp,
-                                    letterSpacing = 1.1.sp,
-                                    color = Color(0xFF474747)
+                                    fontWeight = FontWeight.Medium, fontSize = 11.sp, letterSpacing = 1.1.sp, color = Color(0xFF474747)
                                 ),
                             )
                             Spacer(modifier = Modifier.height(15.dp))
-                            LazyRow(
-                                horizontalArrangement = Arrangement.spacedBy(15.dp)
-
-                            ) {
-                                if(isLoadingCategories) {
-                                    items(5) {
-                                        CategoryItemSkeleton()
-                                    }
-                                }else{
-                                    items(
-                                        count = categoriasItems.itemCount,
-                                        key = categoriasItems.itemKey { it.id }
-                                    ){ index ->
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(15.dp)) {
+                                if (isLoadingCategories) {
+                                    items(5) { CategoryItemSkeleton() }
+                                } else {
+                                    items(count = categoriasItems.itemCount, key = categoriasItems.itemKey { it.id }) { index ->
                                         val categoria = categoriasItems[index]
-                                        categoria.let {
-                                            CategoryItem(
-                                                categoryModel = it!!,
-                                                onGoCategoria = onGoCategoria
-                                            )
-                                        }
+                                        categoria?.let { CategoryItem(categoryModel = it, onGoCategoria = onGoCategoria) }
                                     }
                                 }
-
                             }
                             Spacer(modifier = Modifier.height(25.dp))
-                            Text(text = "Recomendaciones para ti",style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = -(0.6).sp,
-                                fontSize = 24.sp
-                            )
+                            Text(
+                                text = "Recomendaciones para ti", style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = -(0.6).sp, fontSize = 24.sp
+                                )
                             )
                             Spacer(modifier = Modifier.height(10.dp))
                             HorizontalDivider(thickness = 0.5.dp, color = CardBorderColor.copy(alpha = 0.2f))
                             Spacer(modifier = Modifier.height(10.dp))
-
                         }
                     }
-
                 }
-
                 items(
-                    count = if (isLoadingProducts) 6 else  productosItems.itemCount,
+                    count = if (isLoadingProducts) 6 else productosItems.itemCount,
                     key = if (isLoadingProducts) null else productosItems.itemKey { it.id }
-                ){
-                    index ->
-                    if(isLoadingProducts){
+                ) { index ->
+                    if (isLoadingProducts) {
                         ProductCardSkeleton()
-                    }else{
+                    } else {
                         val producto = productosItems[index]
-                        producto?.let {
-                            ProductCard(
-                                product = it,
-                                onGoDetail = onGoDetail
-                            )
-                        }
+                        producto?.let { ProductCard(product = it, onGoDetail = onGoDetail) }
                     }
-
                 }
             }
-
-
         }
-
-
     }
 
-
+    // --- DIÁLOGO DE ALERTA (CORREGIDO PARA EVITAR BLOQUEOS) ---
+    if (showRationale) {
+        AlertDialog(
+            onDismissRequest = { showRationale = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showRationale = false
+                    launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }) {
+                    Text("Configurar", color = Color(0xFF673AB7), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRationale = false }) {
+                    Text("Más tarde", color = Color.Gray)
+                }
+            },
+            title = { Text("¡No te pierdas nada!") },
+            text = { Text("Activa las notificaciones para avisarte cuando tu crédito esté aprobado o recibas una respuesta.") },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = Color.White
+        )
+    }
 }
+
+// Las funciones AppHeader y ProfilePopover se mantienen igual abajo...
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
