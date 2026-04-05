@@ -52,6 +52,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlin.jvm.java
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
+import com.example.comisapp.data.repository.EmployeeRepository
+import com.example.comisapp.ui.screens.ViewModels.AccountViewModel
 import kotlinx.coroutines.launch
 import androidx.fragment.app.FragmentActivity
 
@@ -87,6 +89,7 @@ class MainActivity : FragmentActivity() {
                 val userRepo = remember { UserRepository() }
                 val creditRepo = remember { CreditRepository() }
                 val settingRepo = remember { SettingRepository() }
+                val employeeRepo = remember { EmployeeRepository() }
                 val suggestionRepo = remember { SuggestionRepository() }
 
 
@@ -253,11 +256,16 @@ class MainActivity : FragmentActivity() {
 
 
                     composable("account"){
+                        val factoryAccount = remember{
+                            AccountViewModel.Factory(employeeRepo,userRepo)
+                        }
+                        val accountViewModel: AccountViewModel = viewModel(factory = factoryAccount)
                         AccountScreen(
                             onBackClick = {
                                 nav.popBackStack()
                             },
-                            nav = nav
+                            nav = nav,
+                            accountViewModel
                         )
                     }
 
