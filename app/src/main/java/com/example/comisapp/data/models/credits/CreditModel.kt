@@ -19,8 +19,8 @@ data class CreditModel(
     val usuarioId: String = "",
     val usuario: String = "",
     val cuotasPagadas: Int = 0,
-    val respuesta: String? = "",
     val empleadoId: String? = "",
     val plazoGarantia: Int? = 0,
-    val plazoGarantiaDia: Int? = 0
+    val plazoGarantiaDia: Int? = 0,
+    val Respuesta: String?=""
 )

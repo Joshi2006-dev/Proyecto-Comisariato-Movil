@@ -12,4 +12,6 @@ data class ClaimModel(
     val fechaEmision: Timestamp? = null,
     val fechaRespuesta: Timestamp? = null,
     val respuesta: String? = "",
+    val fechaInicioRevision: Timestamp? = null,
+    val revisadoPor: String? = null,
 )

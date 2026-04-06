@@ -14,10 +14,12 @@
     import kotlinx.coroutines.ExperimentalCoroutinesApi
     import kotlinx.coroutines.flow.Flow
     import kotlinx.coroutines.flow.MutableStateFlow
+    import kotlinx.coroutines.flow.combine
     import kotlinx.coroutines.flow.flatMapLatest
+    import kotlinx.coroutines.launch
 
     class CreditViewModel(
-        repoCredit: CreditRepository,
+        private val repoCredit: CreditRepository,
     ): ViewModel() {
 
         companion object {
@@ -30,6 +32,8 @@
                 }
             }
         }
+
+
 
         private val refreshTrigger = MutableStateFlow(0)
 
@@ -50,6 +54,17 @@
             else -> null
         }
 
+        fun deleteClaim(creditId: String) {
+            viewModelScope.launch {
+                try {
+                    repoCredit.deleteCredit(creditId)
+                    refreshTrigger.value++
+                } catch (e: Exception) {
+                }
+            }
+        }
+
+
         fun onTabSelected(tab: Int) {
             _selectedTab.value = tab
         }
@@ -57,8 +72,7 @@
 
         @OptIn(ExperimentalCoroutinesApi::class)
         val creditsFlow: Flow<PagingData<CreditModel>> =
-
-            _selectedTab.flatMapLatest {
+            combine(_selectedTab, refreshTrigger) { tab, _ -> tab }.flatMapLatest {
                 tab->
                 Pager(
                     config = PagingConfig(

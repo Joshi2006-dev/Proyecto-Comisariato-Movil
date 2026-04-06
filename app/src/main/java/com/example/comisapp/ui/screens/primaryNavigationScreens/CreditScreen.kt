@@ -135,7 +135,8 @@ fun CreditScreen(
                     credit?.let {
                         CreditProgressCard(
                             credito = it,
-                            onDetailClick = { onOpenDetail(credit.id) }
+                            onDetailClick = { onOpenDetail(credit.id) },
+                            onDeleteClick = { viewModel.deleteClaim(credit.id) }
                         )
                     }
 
