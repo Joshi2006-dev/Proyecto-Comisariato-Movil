@@ -1,5 +1,6 @@
 package com.example.comisapp.ui.screens.transactionScreens
 
+import LempiraHelper.toLempira
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -313,7 +314,7 @@ fun DetalleCreditoScreen(
                                     color = TextDark
                                 )
                                 Text(
-                                    text = "Valor por cuota: ${uiState.credit.cuotaMensual}",
+                                    text = "Valor por cuota: ${uiState.credit.cuotaMensual.toLempira()}",
                                     color = TextPurple,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.SemiBold
@@ -343,6 +344,13 @@ fun DetalleCreditoScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         textAlign = TextAlign.End
                                     )
+
+
+                                    ButtonComponent(
+                                        text = "RESEÑAS",
+                                        onClick = {showReviewsSheet = true  },
+                                    )
+
                                 }
 
                             }
@@ -350,6 +358,7 @@ fun DetalleCreditoScreen(
                     }
 
                     if(uiState.credit.estado == "Aprobado" || uiState.credit.estado == "Liquidado"){
+
                         stickyHeader {
                             TabRow(
                                 selectedTabIndex = selectedTabIndex,
@@ -392,6 +401,7 @@ fun DetalleCreditoScreen(
 
                         when (selectedTabIndex) {
                             0 -> {
+
                                 item {
                                     Text(
                                         "Últimas cuotas liquidadas",
@@ -415,20 +425,7 @@ fun DetalleCreditoScreen(
                                     }
                                 }
 
-                                item{
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                showReviewsSheet = true
-                                            }
-                                            .padding(horizontal = 16.dp, vertical = 16.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text("Reseñas", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = BodyText)
-                                    }
-                                }
+
                             }
                             1 -> {
                                 item { SeccionRealizarReclamo(
@@ -452,7 +449,7 @@ fun DetalleCreditoScreen(
                                         ReclamoArchivadoItem(
                                             claim    = claim,
                                             onClick = { selectedClaim = claim },
-                                            onDelete = if (claim.estado.uppercase(getDefault()) != "RESUELTO") {
+                                            onDelete = if (claim.estado.uppercase(getDefault()) != "REVISADO") {
                                                 { viewModel.deleteClaim(claim.id) }
                                             } else null
                                         )
@@ -526,12 +523,6 @@ fun DetalleCreditoScreen(
                                         modifier = Modifier.weight(4f)
                                     )
                                     Spacer(modifier = Modifier.width(5.dp))
-                                    IconButtonComponent(
-                                        icon = Icons.Default.Edit,
-                                        onClick = { showEditSheet  = true  },
-                                        modifier = Modifier.weight(1f)
-
-                                    )
                                 }
 
 
@@ -888,9 +879,9 @@ fun ClaimDetailSheetContent(
         else         -> Icons.Default.HourglassEmpty
     }
     val estadoSubtitulo = when (claim.estado.uppercase()) {
-        "RESUELTO"   -> "Se ha realizado la inspección del reclamo."
+        "REVISADO"   -> "Se ha realizado la inspección del reclamo."
         "RECHAZADO"  -> "El reclamo no pudo ser procesado."
-        "EN PROCESO" -> "Tu reclamo está siendo revisado."
+        "EN REVISIÓN" -> "Tu reclamo está siendo revisado."
         else         -> "Tu reclamo está en espera de revisión."
     }
 
@@ -1023,15 +1014,15 @@ fun ClaimDetailSheetContent(
                         .padding(14.dp)
                         .border(0.5.dp, Color(0xFFEEF2FF).copy(alpha = 0.2f))
                 ) {
-                    if (claim.fechaRespuesta != null) {
+                    if (claim.fechaInicioRevision != null) {
                         Text(
-                            claim.fechaRespuesta.toFormattedDate(),
+                            claim.fechaInicioRevision.toFormattedDate(),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = TextGray
                         )
                     }
-                    claim.atendidoPor?.let {
+                    claim.revisadoPor?.let {
                         Text(
                             "De: $it",
                             fontSize = 12.sp,

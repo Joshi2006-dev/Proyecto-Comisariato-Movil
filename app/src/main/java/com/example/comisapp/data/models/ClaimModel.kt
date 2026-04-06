@@ -9,5 +9,8 @@ data class ClaimModel(
     val estado: String = "",
     val respuesta: String? = null,
     val fechaEmision: Timestamp? = null,
+    val fechaInicioRevision: Timestamp? = null,
+    val revisadoPor: String? = null,
+    val imagenURL: String = "",
     val usuarioId: String = ""
 )

@@ -54,7 +54,7 @@ fun NotFounAnimation(
         )
         Spacer(modifier = Modifier.height(10.dp))
         Text(
-            text = "No se encontraon resultados.",
+            text = "No se encontraron resultados.",
             fontStyle = FontStyle.Normal,
             fontWeight = FontWeight.Light,
             color = Color.Gray,
