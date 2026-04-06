@@ -216,7 +216,6 @@ class CreditRepository {
             val creditRef = db.collection("creditos")
                 .document(creditId)
 
-            // 1. Actualizar estado
             creditRef.update(
                 mapOf(
                     "estado" to nuevoEstado,
@@ -226,6 +225,17 @@ class CreditRepository {
 
         } catch (e: Exception) {
             println("Error al actualizar estado y crear notificación: $e")
+        }
+    }
+
+    suspend fun deleteCredit(creditId: String) {
+        try {
+            db.collection("creditos")
+                .document(creditId)
+                .delete()
+                .await()
+        } catch (e: Exception) {
+            println("Error al eliminar el crédito: $e")
         }
     }
 }

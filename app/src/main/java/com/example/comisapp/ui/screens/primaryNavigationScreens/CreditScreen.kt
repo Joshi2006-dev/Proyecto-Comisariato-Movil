@@ -129,17 +129,19 @@ fun CreditScreen(
                 items(
                     count = creditItems.itemCount,
                     key = creditItems.itemKey { it.id }
-                ){
-                        index ->
+                ) { index ->
                     val credit = creditItems[index]
-                    credit?.let {
+                    credit?.let { item ->
                         CreditProgressCard(
-                            credito = it,
-                            onDetailClick = { onOpenDetail(credit.id) },
-                            onDeleteClick = { viewModel.deleteClaim(credit.id) }
+                            credito = item,
+                            onDetailClick = { onOpenDetail(item.id) },
+                            onCancelClick = {
+                                viewModel.cancelarSolicitud(item.id) {
+                                    creditItems.refresh()
+                                }
+                            }
                         )
                     }
-
                 }
             }
         }
