@@ -60,7 +60,8 @@ import com.example.comisapp.ui.screens.secondaryNavigationScreens.ejecutarBiomet
 fun CreditProgressCard(
     credito: CreditModel,
     onDetailClick: (String) -> Unit = {},
-    onCancelClick: () -> Unit = {}
+    onCancelClick: () -> Unit = {},
+    onDeleteClick: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val activity = remember(context) {
@@ -120,19 +121,28 @@ fun CreditProgressCard(
             Spacer(Modifier.height(16.dp))
 
             ButtonComponent(
-                text = if (credito.estado.equals("Pendiente", ignoreCase = true)) "CANCELAR SOLICITUD" else "VER DETALLES",
+                text = when {
+                    credito.estado.equals("Pendiente", ignoreCase = true) -> "CANCELAR SOLICITUD"
+                    credito.estado.equals("Rechazado", ignoreCase = true) -> "ELIMINAR DEL HISTORIAL"
+                    else -> "VER DETALLES"
+                },
                 onClick = {
-                    if (credito.estado.equals("Pendiente", ignoreCase = true)) {
-                        activity?.let { act ->
-                            ejecutarBiometria(
-                                activity = act,
-                                subtitulo = "Autentícate para cancelar tu pedido"
-                            ) {
-                                onCancelClick()
+                    when {
+                        credito.estado.equals("Pendiente", ignoreCase = true) -> {
+                            activity?.let { act ->
+                                ejecutarBiometria(
+                                    activity = act,
+                                    subtitulo = "Autentícate para cancelar tu pedido"
+                                ) {
+                                    onCancelClick()
+                                }
                             }
                         }
-                    } else {
-                        onDetailClick(credito.id)
+                        credito.estado.equals("Rechazado", ignoreCase = true) -> {
+                        }
+                        else -> {
+                            onDetailClick(credito.id)
+                        }
                     }
                 }
             )
@@ -143,57 +153,52 @@ fun CreditProgressCard(
 @Composable
 private fun CreditBodyProgress(
     credito: CreditModel,
-    onDetailClick: (String)-> Unit
-
+    onDetailClick: (String) -> Unit // Mantenemos el parámetro para que no dé error el when
 ) {
     val progress = if (credito.plazoMeses > 0)
         credito.cuotasPagadas.toFloat() / credito.plazoMeses.toFloat()
     else 0f
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            "Progreso de pago",
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF474747)
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                "Progreso de pago",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF474747)
+                )
             )
-        )
-        Text(
-            "${credito.cuotasPagadas}/${credito.plazoMeses} cuotas",
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF474747)
+            Text(
+                "${credito.cuotasPagadas}/${credito.plazoMeses} cuotas",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF474747)
+                )
             )
-        )
-    }
-    Spacer(Modifier.height(8.dp))
-    LinearProgressIndicator(
-        progress = { progress },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(8.dp)
-            .clip(CircleShape),
-        color = if (credito.estado == "Liquidado") ApbGreen else TextPurple,
-        trackColor = if (credito.estado == "Liquidado")
-            ApbGreen.copy(alpha = 0.1f) else TextPurple.copy(alpha = 0.1f),
-        strokeCap = StrokeCap.Round
-    )
-    Spacer(Modifier.height(16.dp))
-    ButtonComponent(
-        text = "VER DETALLES",
-        onClick = {
-            onDetailClick(credito.id)
         }
-    )
+        Spacer(Modifier.height(8.dp))
+        LinearProgressIndicator(
+            progress = { progress },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(CircleShape),
+            color = if (credito.estado == "Liquidado") ApbGreen else TextPurple,
+            trackColor = if (credito.estado == "Liquidado")
+                ApbGreen.copy(alpha = 0.1f) else TextPurple.copy(alpha = 0.1f),
+            strokeCap = StrokeCap.Round
+        )
+
+    }
 }
 
 @Composable
 private fun CreditBodyPending(
-    creditId : String = "",
-    onDeleteClick : (String) -> Unit = {}
+    creditId: String = "",
+    onDeleteClick: (String) -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -208,28 +213,17 @@ private fun CreditBodyPending(
             imageVector = Icons.Default.Info,
             contentDescription = null,
             tint = Color(0xFF757575),
-            modifier = Modifier
-                .size(18.dp)
-                .padding(top = 1.dp)
+            modifier = Modifier.size(18.dp).padding(top = 1.dp)
         )
         Text(
-            text = "Tu solicitud está en cola para ser revisada por nuestro equipo. " +
-                    "Recibirás una respuesta en los siguientes 7 días hábiles " +
-                    "después de la fecha de emisión.",
+            text = "Tu solicitud está en cola para ser revisada por nuestro equipo. Recibirás una respuesta en los siguientes 7 días hábiles.",
             style = MaterialTheme.typography.bodySmall.copy(
                 color = Color(0xFF474747),
                 lineHeight = 18.sp
             )
         )
-
     }
-    Spacer(Modifier.height(16.dp))
-    ButtonComponent(
-        text = "CANCELAR SOLICITUD",
-        onClick = {
-            onDeleteClick(creditId)
-        }
-    )
+
 }
 
 @Composable
@@ -292,12 +286,6 @@ private fun CreditBodyRejected(
             )
         )
     }
-    Spacer(Modifier.height(16.dp))
-    ButtonComponent(
-        text = "ELIMINAR DEL HISTORIAL",
-        onClick = {
-        }
-    )
 }
 
 @Composable
