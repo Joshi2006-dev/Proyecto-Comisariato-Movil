@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,9 +24,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentActivity
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.comisapp.data.models.credits.CreditModel
@@ -50,11 +54,24 @@ import com.example.comisapp.ui.theme.RpbRed
 import java.util.Locale
 import java.util.Locale.getDefault
 
+import com.example.comisapp.ui.screens.secondaryNavigationScreens.ejecutarBiometria
+
 @Composable
 fun CreditProgressCard(
     credito: CreditModel,
-    onDetailClick: (String) -> Unit={}
+    onDetailClick: (String) -> Unit = {},
+    onCancelClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val activity = remember(context) {
+        var currentContext = context
+        while (currentContext is android.content.ContextWrapper) {
+            if (currentContext is FragmentActivity) break
+            currentContext = currentContext.baseContext
+        }
+        currentContext as? FragmentActivity
+    }
+
     val estadoColor: Color = when (credito.estado) {
         "Aprobado"  -> ApbGreen
         "Rechazado" -> RpbRed
@@ -70,51 +87,20 @@ fun CreditProgressCard(
         border = BorderStroke(0.5.dp, CardBorderColor.copy(alpha = 0.2f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(credito.imagenProductoURL)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = credito.nombreProducto,
+                    model = ImageRequest.Builder(LocalContext.current).data(credito.imagenProductoURL).crossfade(true).build(),
+                    contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFF5F5F5))
+                    modifier = Modifier.size(60.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFF5F5F5))
                 )
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = credito.nombreProducto,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1A1C1E)
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = "Emitido: ${credito.fechaRegistro?.toFormattedDate()}",
-                        style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
-                    )
+                    Text(text = credito.nombreProducto, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Text(text = "Emitido: ${credito.fechaRegistro?.toFormattedDate()}", fontSize = 12.sp, color = Color.Gray)
                 }
-                Spacer(Modifier.width(12.dp))
-                Surface(
-                    color = estadoColor.copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(20.dp)
-                ) {
-                    Text(
-                        text = credito.estado.uppercase(),
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = estadoColor,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
+                Surface(color = estadoColor.copy(alpha = 0.15f), shape = RoundedCornerShape(20.dp)) {
+                    Text(text = credito.estado.uppercase(), modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = estadoColor, fontWeight = FontWeight.Bold, fontSize = 10.sp)
                 }
             }
 
@@ -130,9 +116,20 @@ fun CreditProgressCard(
             Spacer(Modifier.height(16.dp))
 
             ButtonComponent(
-                text = "VER DETALLES",
+                text = if (credito.estado.equals("Pendiente", ignoreCase = true)) "CANCELAR SOLICITUD" else "VER DETALLES",
                 onClick = {
-                    onDetailClick(credito.id)
+                    if (credito.estado.equals("Pendiente", ignoreCase = true)) {
+                        activity?.let { act ->
+                            ejecutarBiometria(
+                                activity = act,
+                                subtitulo = "Autentícate para cancelar tu pedido"
+                            ) {
+                                onCancelClick()
+                            }
+                        }
+                    } else {
+                        onDetailClick(credito.id)
+                    }
                 }
             )
         }
