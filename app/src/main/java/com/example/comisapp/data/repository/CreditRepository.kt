@@ -50,6 +50,13 @@ class CreditRepository {
 
     }
 
+    suspend fun deleteCredit(creditId: String) {
+        db.collection("creditos")
+            .document(creditId)
+            .delete()
+            .await()
+    }
+
     suspend fun getCreditByUserId(
         userId: String,
         limit: Int,

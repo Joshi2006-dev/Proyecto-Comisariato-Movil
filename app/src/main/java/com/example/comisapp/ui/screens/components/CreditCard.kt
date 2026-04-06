@@ -107,10 +107,14 @@ fun CreditProgressCard(
             Spacer(Modifier.height(16.dp))
 
             when (credito.estado) {
-                "Aprobado", "Liquidado" -> CreditBodyProgress(credito)
-                "Pendiente"             -> CreditBodyPending()
-                "Rechazado"             -> CreditBodyRejected()
+                "Aprobado", "Liquidado" -> CreditBodyProgress(credito, onDetailClick)
+                "Pendiente"             -> CreditBodyPending(
+                    credito.id,
+                    onDeleteClick
+                )
+                "Rechazado"             -> CreditBodyRejected(credito.Respuesta?:"")
                 "Cancelado"             -> CreditBodyCancelled()
+                "En revisión"           -> CreditBodyInRevision()
             }
 
             Spacer(Modifier.height(16.dp))
@@ -137,7 +141,11 @@ fun CreditProgressCard(
 }
 
 @Composable
-private fun CreditBodyProgress(credito: CreditModel) {
+private fun CreditBodyProgress(
+    credito: CreditModel,
+    onDetailClick: (String)-> Unit
+
+) {
     val progress = if (credito.plazoMeses > 0)
         credito.cuotasPagadas.toFloat() / credito.plazoMeses.toFloat()
     else 0f
@@ -173,11 +181,20 @@ private fun CreditBodyProgress(credito: CreditModel) {
             ApbGreen.copy(alpha = 0.1f) else TextPurple.copy(alpha = 0.1f),
         strokeCap = StrokeCap.Round
     )
+    Spacer(Modifier.height(16.dp))
+    ButtonComponent(
+        text = "VER DETALLES",
+        onClick = {
+            onDetailClick(credito.id)
+        }
+    )
 }
 
-
 @Composable
-private fun CreditBodyPending() {
+private fun CreditBodyPending(
+    creditId : String = "",
+    onDeleteClick : (String) -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -196,7 +213,7 @@ private fun CreditBodyPending() {
                 .padding(top = 1.dp)
         )
         Text(
-            text = "Tu solicitud está siendo revisada por nuestro equipo. " +
+            text = "Tu solicitud está en cola para ser revisada por nuestro equipo. " +
                     "Recibirás una respuesta en los siguientes 7 días hábiles " +
                     "después de la fecha de emisión.",
             style = MaterialTheme.typography.bodySmall.copy(
@@ -204,11 +221,52 @@ private fun CreditBodyPending() {
                 lineHeight = 18.sp
             )
         )
+
+    }
+    Spacer(Modifier.height(16.dp))
+    ButtonComponent(
+        text = "CANCELAR SOLICITUD",
+        onClick = {
+            onDeleteClick(creditId)
+        }
+    )
+}
+
+@Composable
+private fun CreditBodyInRevision(
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFF5F5F5))
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Icon(
+            imageVector = Icons.Default.Info,
+            contentDescription = null,
+            tint = Color(0xFF757575),
+            modifier = Modifier
+                .size(18.dp)
+                .padding(top = 1.dp)
+        )
+        Text(
+            text = "Tu solicitud está siendo revisada por un miembro de nuestro equipo, pronto recibirás una respuesta.",
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = Color(0xFF474747),
+                lineHeight = 18.sp
+            )
+        )
+
     }
 }
 
 @Composable
-private fun CreditBodyRejected() {
+private fun CreditBodyRejected(
+    respuesta: String
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -227,13 +285,19 @@ private fun CreditBodyRejected() {
                 .padding(top = 1.dp)
         )
         Text(
-            text = "No cumple con los requisitos mínimos para optar por este crédito.",
+            text = respuesta,
             style = MaterialTheme.typography.bodySmall.copy(
                 color = RpbRed,
                 lineHeight = 18.sp
             )
         )
     }
+    Spacer(Modifier.height(16.dp))
+    ButtonComponent(
+        text = "ELIMINAR DEL HISTORIAL",
+        onClick = {
+        }
+    )
 }
 
 @Composable
