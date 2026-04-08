@@ -34,7 +34,8 @@ class CreditRepository {
                 "usuarioId" to credit.usuarioId,
                 "usuario" to credit.usuario,
                 "empleadoId" to credit.empleadoId,
-                "cuotasPagadas" to 0
+                "cuotasPagadas" to 0,
+                "visible" to true
             )
             db.collection("creditos").add(newCreditRef).await()
         } catch (e: Exception){
@@ -51,7 +52,7 @@ class CreditRepository {
     }
 
     suspend fun getCreditByUserId(userId: String, limit: Int, lastDocument: DocumentSnapshot? = null, estado: String? = null): PageResult<CreditModel> {
-        var query = db.collection("creditos").whereEqualTo("usuarioId", userId)
+        var query = db.collection("creditos").whereEqualTo("usuarioId", userId).whereEqualTo("visible", true)
         if(estado != null) query = query.whereEqualTo("estado", estado)
         query = query.orderBy("fechaRegistro", Query.Direction.DESCENDING).limit(limit.toLong())
         lastDocument?.let { query = query.startAfter(it) }
@@ -110,6 +111,14 @@ class CreditRepository {
             "cuotaMensual" to cuotaMensual,
             "totalCredito" to totalCredito
         )).await()
+    }
+
+    suspend fun hideCredit(creditId: String) {
+        db.collection("creditos").document(creditId).update(
+            mapOf(
+                "visible" to false
+            )
+        ).await()
     }
 
     suspend fun updateCreditStatus(creditId: String, nuevoEstado: String, usuarioId: String) {

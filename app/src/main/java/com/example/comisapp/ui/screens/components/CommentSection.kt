@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,11 +18,14 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,6 +34,12 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.example.comisapp.R
 import com.example.comisapp.data.models.CommentModel
 import com.example.comisapp.data.repository.ProductRepository
 
@@ -48,6 +58,8 @@ fun ReviewsBottomSheetContent(
         factory = ReviewsViewModel.Factory(productId, repository)
     )
 ) {
+
+
     val uiState by vm.uiState.collectAsState()
     val comments = vm.comments.collectAsLazyPagingItems()
 
@@ -95,6 +107,12 @@ private fun ReviewsBottomSheetUi(
     canComment: Boolean,
     onClose: () -> Unit
 ) {
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.review))
+    val progress by animateLottieCompositionAsState(
+        composition,
+        iterations = LottieConstants.IterateForever
+    )
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -119,22 +137,51 @@ private fun ReviewsBottomSheetUi(
 
         RatingSummaryCard(rating = productRating, reviewCount = productReviewCount)
 
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
-        ) {
-            items(
-                count = comments.itemCount,
-                key = comments.itemKey { it.id }
-            ) { index ->
-                val comment = comments[index]
-                if (comment != null) {
-                    ReviewItem(comment = comment)
+        if(comments.itemCount == 0){
+            Column(
+                modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                LottieAnimation(
+                    composition,
+                    progress={progress},
+                    modifier = Modifier
+                        .size(200.dp)
+                        .padding(bottom = 16.dp)
+                        .alpha(0.5f),
+                    contentScale = ContentScale.Fit,
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "Aun no hay comentarios",
+                    fontStyle = FontStyle.Normal,
+                    fontWeight = FontWeight.Light,
+                    color = Color.Gray,
+                    fontSize = 14.sp,
+                    modifier = Modifier.offset( y= -(30.dp))
+                )
+            }
+        }else{
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
+            ) {
+                items(
+                    count = comments.itemCount,
+                    key = comments.itemKey { it.id }
+                ) { index ->
+                    val comment = comments[index]
+                    if (comment != null) {
+                        ReviewItem(comment = comment)
+                    }
                 }
             }
         }
+
+
 
         AnimatedVisibility(
             visible = uiState.sendError != null,

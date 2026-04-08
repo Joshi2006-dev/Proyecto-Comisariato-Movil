@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -36,6 +37,7 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.example.comisapp.ui.screens.ViewModels.SaveViewModel
+import com.example.comisapp.ui.screens.components.EmptyAnimation
 import com.example.comisapp.ui.screens.components.NotFounAnimation
 import com.example.comisapp.ui.screens.components.ProductCard
 import com.example.comisapp.ui.screens.components.ProductCardSkeleton
@@ -96,12 +98,20 @@ fun SaveScreen(
         ){
 
             if (!isFavoriteLoading && favorites.itemCount == 0) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    NotFounAnimation()
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillParentMaxHeight(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            EmptyAnimation()
+                        }
+                    }
                 }
             } else {
                 LazyVerticalGrid(

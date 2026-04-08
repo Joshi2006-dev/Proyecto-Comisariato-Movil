@@ -238,6 +238,7 @@ class ProductRepository {
         var query = db.collection("productos")
             .document(productId)
             .collection("comentarios")
+            .whereEqualTo("visible", true)
             .limit(limit.toLong())
 
         lastDocument?.let { query = query.startAfter(it) }
