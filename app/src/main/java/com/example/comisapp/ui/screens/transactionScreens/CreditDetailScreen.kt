@@ -575,10 +575,10 @@ fun CuotaItem(
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(text = "${quota.fechaRegistro?.toFormattedDate()}", fontWeight = FontWeight.Bold, color = TextDark)
-                Text(text = "CUOTA $numCuota", fontSize = 12.sp, color = TextGray)
+                Text(text = "CUOTA ${quota.numeroCuota}", fontSize = 12.sp, color = TextGray)
             }
             Spacer(modifier = Modifier.weight(1f))
-            Text(text = "L ${quota.monto}", fontWeight = FontWeight.Bold, color = TextDark, fontSize = 16.sp)
+            Text(text = quota.monto.toLempira(), fontWeight = FontWeight.Bold, color = TextDark, fontSize = 16.sp)
         }
     }
 }
