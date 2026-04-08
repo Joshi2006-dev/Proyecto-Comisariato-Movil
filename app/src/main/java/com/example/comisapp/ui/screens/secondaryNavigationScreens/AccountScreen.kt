@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.comisapp.R
+import com.example.comisapp.ui.helpers.CreditHelper
 import com.example.comisapp.ui.screens.ViewModels.AccountViewModel
 import com.example.comisapp.ui.screens.ViewModels.EmployeeDetailState
 import com.example.comisapp.ui.theme.TextPurple
@@ -215,7 +216,10 @@ fun AccountScreen(
 
 
                 if (limiteUsado != null) {
-                    progress = ((limiteUsado / uiState.employee.limiteCredito) * 10.0).toInt() / 10.0f
+                    progress = CreditHelper.calcularProgreso(
+                        limiteUsado = limiteUsado,
+                        limiteTotal = uiState.employee.limiteCredito
+                    )
                 }
 
                 Card(

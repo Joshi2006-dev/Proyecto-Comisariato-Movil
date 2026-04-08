@@ -25,6 +25,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
@@ -39,6 +42,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,6 +61,9 @@ import com.example.comisapp.R
 import com.example.comisapp.ui.screens.components.CreditProgressCard
 import com.example.comisapp.ui.theme.TextPurple
 import com.example.comisapp.ui.screens.ViewModels.CreditViewModel
+import com.example.comisapp.ui.screens.components.EmptyAnimation
+import com.example.comisapp.ui.screens.components.NoCreditAnimation
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,7 +71,8 @@ fun CreditScreen(
     onOpenDetail: (String) -> Unit = {},
     viewModel: CreditViewModel
 ) {
-
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     val creditItems = viewModel.creditsFlow.collectAsLazyPagingItems()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val selectedTab by viewModel.selectedTab.collectAsState()
@@ -78,8 +86,21 @@ fun CreditScreen(
         }
     }
 
+    val creditIsLoading = creditItems.loadState.refresh is LoadState.Loading
+
+
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        snackbarHost = {
+            Box(modifier = Modifier.fillMaxSize()) {
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 70.dp)
+                )
+            }
+        },
         topBar = {
             Column(
                 modifier = Modifier
@@ -120,30 +141,71 @@ fun CreditScreen(
                 .fillMaxSize()
                 .background(Color.White),
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(
-                    count = creditItems.itemCount,
-                    key = creditItems.itemKey { it.id }
-                ) { index ->
-                    val credit = creditItems[index]
-                    credit?.let { item ->
-                        CreditProgressCard(
-                            credito = item,
-                            onDetailClick = { onOpenDetail(item.id) },
-                            onCancelClick = {
-                                viewModel.cancelarSolicitud(item.id) {
-                                    creditItems.refresh()
-                                }
-                            }
-                        )
+            if (!creditIsLoading && creditItems.itemCount == 0) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillParentMaxHeight(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            NoCreditAnimation()
+                        }
                     }
                 }
+            }else{
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+
+                    items(
+                        count = creditItems.itemCount,
+                        key = creditItems.itemKey { it.id }
+                    ) { index ->
+                        val credit = creditItems[index]
+                        credit?.let { item ->
+                            CreditProgressCard(
+                                credito = item,
+                                onDetailClick = { onOpenDetail(item.id) },
+                                onCancelClick = {
+                                    viewModel.cancelarSolicitud(item.id) {
+                                        creditItems.refresh()
+                                        scope.launch {
+                                            snackbarHostState.currentSnackbarData?.dismiss()
+                                            snackbarHostState.showSnackbar(
+                                                message = "Se ha cancelado el crédito",
+                                                duration = SnackbarDuration.Short
+                                            )
+                                        }
+                                    }
+                                },
+                                onDeleteClick = {
+                                    viewModel.hideCredit(item.id) {
+                                        creditItems.refresh()
+                                        scope.launch {
+                                            snackbarHostState.currentSnackbarData?.dismiss()
+                                            snackbarHostState.showSnackbar(
+                                                message = "Se ha eliminado el credito del historial.",
+                                                duration = SnackbarDuration.Short
+                                            )
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                    }
+
+
+                }
             }
+
         }
     }
 }

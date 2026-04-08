@@ -58,6 +58,17 @@ class CreditViewModel(
         }
     }
 
+    fun hideCredit(creditId: String, onComplete: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                repoCredit.hideCredit(creditId)
+                onComplete()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val creditsFlow: Flow<PagingData<CreditModel>> = _selectedTab.flatMapLatest { tab ->
         Pager(

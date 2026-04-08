@@ -71,7 +71,8 @@ class ReviewsViewModel(
                     "email" to userEmail,
                     "fecha" to Timestamp.now(),
                     "rate" to state.selectedRating,
-                    "fotoUrl" to userPhotoUrl
+                    "fotoUrl" to userPhotoUrl,
+                    "visible" to true
                 )
                 db.collection("productos")
                     .document(productId)

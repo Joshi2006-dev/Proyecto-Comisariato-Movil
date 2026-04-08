@@ -61,7 +61,8 @@ fun CreditProgressCard(
     credito: CreditModel,
     onDetailClick: (String) -> Unit = {},
     onCancelClick: () -> Unit = {},
-    onDeleteClick: (String) -> Unit = {}
+    onHideClick: (String) -> Unit = {},
+    onDeleteClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val activity = remember(context) {
@@ -109,10 +110,7 @@ fun CreditProgressCard(
 
             when (credito.estado) {
                 "Aprobado", "Liquidado" -> CreditBodyProgress(credito, onDetailClick)
-                "Pendiente"             -> CreditBodyPending(
-                    credito.id,
-                    onDeleteClick
-                )
+                "Pendiente"             -> CreditBodyPending()
                 "Rechazado"             -> CreditBodyRejected(credito.Respuesta?:"")
                 "Cancelado"             -> CreditBodyCancelled()
                 "En revisión"           -> CreditBodyInRevision()
@@ -139,6 +137,7 @@ fun CreditProgressCard(
                             }
                         }
                         credito.estado.equals("Rechazado", ignoreCase = true) -> {
+                            onDeleteClick()
                         }
                         else -> {
                             onDetailClick(credito.id)
@@ -197,8 +196,7 @@ private fun CreditBodyProgress(
 
 @Composable
 private fun CreditBodyPending(
-    creditId: String = "",
-    onDeleteClick: (String) -> Unit = {}
+
 ) {
     Row(
         modifier = Modifier

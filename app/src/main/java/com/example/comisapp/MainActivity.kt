@@ -59,13 +59,22 @@ import androidx.fragment.app.FragmentActivity
 
 
 class MainActivity : FragmentActivity() {
+    private fun isOnboardingFinished(): Boolean {
+        val sharedPref = getSharedPreferences("onboarding_prefs", MODE_PRIVATE)
+        return sharedPref.getBoolean("finished", false)
+    }
+
+    private fun finishOnboarding() {
+        val sharedPref = getSharedPreferences("onboarding_prefs", MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putBoolean("finished", true)
+            apply()
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // ── Canal de notificaciones ───────────────────────────────────
-        // Usa el mismo channelId "notificaciones" que ya tienes en
-        // MyFirebaseMessagingService
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val manager = getSystemService(NotificationManager::class.java)
             val canal = NotificationChannel(
@@ -78,6 +87,8 @@ class MainActivity : FragmentActivity() {
             }
             manager.createNotificationChannel(canal)
         }
+
+
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
@@ -93,7 +104,6 @@ class MainActivity : FragmentActivity() {
                 val suggestionRepo = remember { SuggestionRepository() }
 
 
-                // Este bloque se encarga de sacar al usuario si pasa a INACTIVO
                 val userEmail = FirebaseAuth.getInstance().currentUser?.email
 
                 if (userEmail != null) {
@@ -121,9 +131,15 @@ class MainActivity : FragmentActivity() {
                     }
                 }
 
+                val startDest = when {
+                    !isOnboardingFinished() -> "onboarding"
+                    repo.islogged() -> "principal"
+                    else -> "login"
+                }
+
                 NavHost(
                     navController = nav,
-                    startDestination = if (repo.islogged()) "principal" else "login",
+                    startDestination = startDest,
                     modifier = Modifier.fillMaxSize(),
                     enterTransition = {
                         slideIntoContainer(
@@ -153,6 +169,7 @@ class MainActivity : FragmentActivity() {
                     composable("onboarding"){
                         OnboardingScreen(
                             onFinish = {
+                                finishOnboarding()
                                 nav.navigate("login"){
                                     popUpTo("onboarding"){
                                         inclusive = true
