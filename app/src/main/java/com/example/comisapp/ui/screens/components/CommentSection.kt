@@ -139,7 +139,7 @@ private fun ReviewsBottomSheetUi(
 
         if(comments.itemCount == 0){
             Column(
-                modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+                modifier = Modifier.fillMaxWidth().weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
