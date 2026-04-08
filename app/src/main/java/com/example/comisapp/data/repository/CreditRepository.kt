@@ -1,6 +1,7 @@
 package com.example.comisapp.data.repository
 
 import android.net.Uri
+import android.util.Log
 import com.example.comisapp.data.models.credits.ClaimModel
 import com.example.comisapp.data.models.credits.CreditModel
 import com.example.comisapp.data.models.credits.QuotaModel
@@ -68,12 +69,34 @@ class CreditRepository {
         } catch (e: Exception) { null }
     }
 
-    suspend fun getQoutasByCreditId(creditId: String, limit: Int, lastDocument: DocumentSnapshot? = null): PageResult<QuotaModel> {
-        var query = db.collection("creditos").document(creditId).collection("cuotas").limit(limit.toLong())
-        lastDocument?.let { query = query.startAfter(it) }
-        val result = query.get().await()
-        val cuotas = result.documents.mapNotNull { doc -> doc.toObject(QuotaModel::class.java)?.copy(id = doc.id) }
-        return PageResult(data = cuotas, lastDocument = if (!result.isEmpty) result.documents.last() else null)
+    suspend fun getQoutasByCreditId(
+        creditId: String,
+        limit: Int,
+        lastDocument: DocumentSnapshot? = null
+    ): PageResult<QuotaModel> {
+        var query = db.collection("cuotas")
+            .whereEqualTo("creditoId", creditId)
+            .orderBy("numeroCuota", Query.Direction.ASCENDING)
+            .limit(limit.toLong())
+
+        lastDocument?.let {
+            query = query.startAfter(it)
+        }
+
+        return try {
+            val result = query.get().await()
+            val cuotas = result.documents.mapNotNull { doc ->
+                doc.toObject(QuotaModel::class.java)?.copy(id = doc.id)
+            }
+
+            PageResult(
+                data = cuotas,
+                lastDocument = if (!result.isEmpty) result.documents.last() else null
+            )
+        } catch (e: Exception) {
+            Log.e("FirestoreError", "Error al obtener cuotas: ${e.message}")
+            PageResult(data = emptyList(), lastDocument = null)
+        }
     }
 
     suspend fun getClaimsByCreditId(creditId: String): List<ClaimModel> {
