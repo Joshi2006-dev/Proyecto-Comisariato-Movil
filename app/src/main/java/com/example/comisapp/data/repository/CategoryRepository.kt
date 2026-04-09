@@ -22,28 +22,28 @@ class CategoryRepository {
         }
     }
 
-    suspend fun getCategorias(limit: Int): List<CategoryModel>{
+    suspend fun getCategorias(
+        limit: Int,
+        startAfter: DocumentSnapshot? = null
+    ): Pair<List<CategoryModel>, DocumentSnapshot?> {
 
         var query = db.collection("categorias")
             .whereEqualTo("estado", "ACTIVO")
             .limit(limit.toLong())
 
-        lastDocument?.let {
+        startAfter?.let {
             query = query.startAfter(it)
         }
 
         val result = query.get().await()
 
-        if(!result.isEmpty){
-            lastDocument = result.documents.last()
+        val items = result.documents.mapNotNull { document ->
+            document.toObject(CategoryModel::class.java)?.copy(id = document.id)
         }
 
-        return result.documents.mapNotNull {
-            document ->
-            val categoria = document.toObject(CategoryModel::class.java)
-            categoria?.copy(id = document.id)
-        }
+        val nextCursor = if (result.isEmpty) null else result.documents.last()
 
+        return Pair(items, nextCursor)  // ✅ Retorna datos + cursor juntos
     }
 
     fun resetPagination(){

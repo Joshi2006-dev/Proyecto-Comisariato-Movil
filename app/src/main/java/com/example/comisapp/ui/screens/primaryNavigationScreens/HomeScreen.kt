@@ -128,13 +128,6 @@ fun HomeScreen(
                 item(span = { GridItemSpan(2) }) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = "QUIZAS PODRÍA INTERESARTE",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Medium, fontSize = 11.sp, letterSpacing = 1.1.sp, color = Color(0xFF474747)
-                            ),
-                        )
-                        Spacer(modifier = Modifier.height(5.dp))
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
@@ -151,7 +144,7 @@ fun HomeScreen(
                                 Box(modifier = Modifier.align(Alignment.BottomStart).padding(25.dp)) {
                                     Column {
                                         Text(
-                                            text = "Lo Más \nDestacado",
+                                            text = "Lo Más \nReciente",
                                             style = MaterialTheme.typography.labelSmall.copy(
                                                 color = Color.White, fontSize = 36.sp, fontWeight = FontWeight.Bold, lineHeight = 40.sp, letterSpacing = -1.8.sp
                                             ),
@@ -159,7 +152,7 @@ fun HomeScreen(
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            text = "Conoce lo productos mas solicitados por nuestros usuarios",
+                                            text = "Conoce lo productos mas recientes",
                                             style = MaterialTheme.typography.labelSmall.copy(
                                                 color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp, fontWeight = FontWeight.Normal, lineHeight = 20.sp, letterSpacing = 0.sp
                                             ),

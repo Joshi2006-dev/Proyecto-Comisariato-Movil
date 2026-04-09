@@ -52,6 +52,7 @@ dependencies {
     implementation("androidx.paging:paging-compose:3.3.0")
     implementation("com.valentinilk.shimmer:compose-shimmer:1.3.1")
     implementation("com.airbnb.android:lottie-compose:6.4.0")
+    implementation("androidx.core:core-splashscreen:1.0.1")
 
 
     implementation(libs.androidx.compose.animation.core)

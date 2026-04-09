@@ -56,6 +56,7 @@ import com.example.comisapp.data.repository.EmployeeRepository
 import com.example.comisapp.ui.screens.ViewModels.AccountViewModel
 import kotlinx.coroutines.launch
 import androidx.fragment.app.FragmentActivity
+import com.example.comisapp.ui.screens.SplashScreen
 
 
 class MainActivity : FragmentActivity() {
@@ -131,15 +132,11 @@ class MainActivity : FragmentActivity() {
                     }
                 }
 
-                val startDest = when {
-                    !isOnboardingFinished() -> "onboarding"
-                    repo.islogged() -> "principal"
-                    else -> "login"
-                }
+
 
                 NavHost(
                     navController = nav,
-                    startDestination = startDest,
+                    startDestination = "splash",
                     modifier = Modifier.fillMaxSize(),
                     enterTransition = {
                         slideIntoContainer(
@@ -166,6 +163,19 @@ class MainActivity : FragmentActivity() {
                         )
                     }
                 ){
+                    composable("splash") {
+                        SplashScreen(onAnimationFinished = {
+                            val destination = when {
+                                !isOnboardingFinished() -> "onboarding"
+                                repo.islogged() -> "principal"
+                                else -> "login"
+                            }
+                            nav.navigate(destination) {
+                                popUpTo("splash") { inclusive = true }
+                            }
+                        })
+                    }
+
                     composable("onboarding"){
                         OnboardingScreen(
                             onFinish = {

@@ -143,10 +143,10 @@ fun RecoveryScreen(
             Text(
                 text = buildAnnotatedString {
                     withStyle(SpanStyle(color = TextDark, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)) {
-                        append("Comis")
+                        append("Credi")
                     }
                     withStyle(SpanStyle(color = TextPurple, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)) {
-                        append("App")
+                        append("Flow")
                     }
                 },
                 fontSize = 20.sp
