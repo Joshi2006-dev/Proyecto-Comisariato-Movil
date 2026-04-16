@@ -58,7 +58,8 @@ fun CustomBottomBar(
         BottomBarScreen.Home,
         BottomBarScreen.Catalogo,
         BottomBarScreen.Creditos,
-        BottomBarScreen.Guardados
+        BottomBarScreen.Guardados,
+        BottomBarScreen.Examen
     )
 
     val indicatorFraction = 1f / items.size
