@@ -52,15 +52,10 @@ import com.example.comisapp.ui.theme.CardBorderColor
 @Composable
 fun CustomBottomBar(
     pagerState: PagerState,
+    screens: List<BottomBarScreen>,
     onTabSelected: (Int) -> Unit
 ) {
-    val items = listOf(
-        BottomBarScreen.Home,
-        BottomBarScreen.Catalogo,
-        BottomBarScreen.Creditos,
-        BottomBarScreen.Guardados,
-        BottomBarScreen.Examen
-    )
+    val items = screens
 
     val indicatorFraction = 1f / items.size
 
