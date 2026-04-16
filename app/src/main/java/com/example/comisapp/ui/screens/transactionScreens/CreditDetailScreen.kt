@@ -73,6 +73,7 @@ import com.example.comisapp.ui.screens.components.PaymentMode
 import com.example.comisapp.ui.theme.RpbRed
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.HourglassEmpty
+import com.example.comisapp.ui.screens.components.BiometricAction
 import com.example.comisapp.ui.screens.components.BodyText
 import com.example.comisapp.ui.screens.components.ReviewsBottomSheetContent
 
@@ -264,6 +265,7 @@ fun DetalleCreditoScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     item {
+
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -345,12 +347,18 @@ fun DetalleCreditoScreen(
                                         textAlign = TextAlign.End
                                     )
 
-
-                                    ButtonComponent(
-                                        text = "RESEÑAS",
-                                        onClick = {showReviewsSheet = true  },
-                                    )
-
+                                    BiometricAction(
+                                        title = "Verificar identidad",
+                                        subtitle = "Confirma tu identidad para realizar una acción",
+                                        onNotAvailable = {}
+                                    ) {
+                                        trigger ->
+                                        ButtonComponent(
+                                            text = "RESEÑAS",
+                                            onClick =
+                                                {trigger{showReviewsSheet = true  }},
+                                        )
+                                    }
                                 }
 
                             }
@@ -587,32 +595,40 @@ fun CuotaItem(
 fun SeccionRealizarReclamo(
     onClick : () -> Unit = {}
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 30.dp, vertical = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            "¿Algo no va bien?",
-            fontSize = 30.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = TextDark,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            "Estamos aquí para ayudarte a resolver cualquier inconveniente con tu crédito.",
-            fontSize = 16.sp,
-            color = TextGray,
-            textAlign = TextAlign.Center,
-            lineHeight = 24.sp
-        )
-        Spacer(modifier = Modifier.height(28.dp))
-        ButtonComponent(
-            text = "REALIZAR RECLAMO",
-            onClick = { onClick() }
-        )
+    BiometricAction(
+        title = "Verificar identidad",
+        subtitle = "Confirma tu identidad para realizar un reclamo",
+        onNotAvailable = {}
+    ) { trigger ->
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 30.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                "¿Algo no va bien?",
+                fontSize = 30.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = TextDark,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                "Estamos aquí para ayudarte a resolver cualquier inconveniente con tu crédito.",
+                fontSize = 16.sp,
+                color = TextGray,
+                textAlign = TextAlign.Center,
+                lineHeight = 24.sp
+            )
+            Spacer(modifier = Modifier.height(28.dp))
+            ButtonComponent(
+                text = "REALIZAR RECLAMO",
+                onClick = {
+                    trigger { onClick() }
+                }
+            )
+        }
     }
 }
 

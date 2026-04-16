@@ -47,6 +47,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.setValue
 import com.example.comisapp.data.repository.UserRepository
 import com.example.comisapp.ui.screens.ViewModels.SaveViewModel
+import com.example.comisapp.ui.screens.primaryNavigationScreens.ScreenEx
 
 
 private fun eliminarToken(email: String) {
@@ -82,7 +83,8 @@ fun MainScreen(
         BottomBarScreen.Home,
         BottomBarScreen.Catalogo,
         BottomBarScreen.Creditos,
-        BottomBarScreen.Guardados
+        BottomBarScreen.Guardados,
+        BottomBarScreen.Examen
     )
 
     val repoCredit = CreditRepository()
@@ -251,6 +253,9 @@ fun MainScreen(
                             )
                         }
                     )
+
+                4 ->
+                    ScreenEx()
 
             }
 
