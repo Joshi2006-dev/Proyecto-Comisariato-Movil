@@ -10,6 +10,21 @@ class UserRepository {
     private val db = Firebase.firestore
     private val auth = FirebaseAuth.getInstance()
 
+
+    suspend fun getRolUsuario():String{
+        val email = auth.currentUser?.email ?: throw Exception("Usuario no autenticado")
+
+        val userDoc = db.collection("usuarios")
+            .document(email)
+            .get()
+            .await()
+
+        if (!userDoc.exists()) throw Exception("Usuario no encontrado")
+        val roles = userDoc.get("rol") as? List<*>?: emptyList<Any>()
+
+        return roles.getOrNull(1)?.toString()?:"EMPLEADO"
+    }
+
     suspend fun getCurrentUser(): UserModel? {
         val uid = auth.currentUser?.email ?: return null
         return try {

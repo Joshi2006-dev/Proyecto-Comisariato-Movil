@@ -69,6 +69,7 @@ fun HomeScreen(
     val categoriasItems = viewModel.categoriesFlow.collectAsLazyPagingItems()
     val productosItems = viewModel.productsFlow.collectAsLazyPagingItems()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val role = viewModel.roleUser
 
     val profileUrl = viewModel.currentUser?.fotoUrl
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -129,7 +130,7 @@ fun HomeScreen(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
-                            text = "QUIZAS PODRÍA INTERESARTE",
+                            text = "QUIZAS PODRÍA INTERESARTE TU ROL: ${role?.uppercase()}",
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Medium, fontSize = 11.sp, letterSpacing = 1.1.sp, color = Color(0xFF474747)
                             ),

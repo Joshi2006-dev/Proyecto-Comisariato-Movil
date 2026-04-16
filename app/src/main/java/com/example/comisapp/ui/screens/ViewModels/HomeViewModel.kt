@@ -45,14 +45,26 @@ class HomeViewModel(
     var currentUser by mutableStateOf<UserModel?>(null)
         private set
 
+    var roleUser by mutableStateOf<String?>(null)
+        private set
+
     private fun loadCurrentUser() {
         viewModelScope.launch {
             currentUser = userRepo.getCurrentUser()
         }
     }
 
+    private fun loadRole(){
+        viewModelScope.launch {
+            roleUser = userRepo.getRolUsuario()
+        }
+    }
+
+
+
     init {
         loadCurrentUser()
+        loadRole()
     }
 
     val productsFlow: Flow<PagingData<ProductModel>> = Pager(

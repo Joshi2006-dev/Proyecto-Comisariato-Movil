@@ -43,8 +43,10 @@ import com.google.firebase.messaging.FirebaseMessaging
 
 import kotlinx.coroutines.launch
 import android.util.Log
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import com.example.comisapp.data.repository.UserRepository
 import com.example.comisapp.ui.screens.ViewModels.SaveViewModel
 import com.example.comisapp.ui.screens.primaryNavigationScreens.ScreenEx
@@ -70,7 +72,6 @@ private fun eliminarToken(email: String) {
 }
 
 
-
 @Composable
 fun MainScreen(
     navController: NavHostController,
@@ -79,67 +80,64 @@ fun MainScreen(
 ) {
     var initialCategoriaId by remember { mutableStateOf<String?>(null) }
 
-    val screens = listOf(
-        BottomBarScreen.Home,
-        BottomBarScreen.Catalogo,
-        BottomBarScreen.Creditos,
-        BottomBarScreen.Guardados,
-        BottomBarScreen.Examen
-    )
-
     val repoCredit = CreditRepository()
     val categoryRepo = CategoryRepository()
     val productRepo = ProductRepository()
     val userRepo = UserRepository()
 
+    val factoryHome = HomeViewModel.Factory(categoryRepo, productRepo, userRepo)
+    val factoryCatalog = CatalogViewModel.Factory(categoryRepo, productRepo)
+    val factoryCredit = CreditViewModel.Factory(repoCredit)
+    val factorySave = SaveViewModel.Factory(productRepo)
 
-    val factoryHome =
-        HomeViewModel.Factory(
-            categoryRepo,
-
-            productRepo,
-            userRepo
-        )
-
-    val factoryCatalog =
-        CatalogViewModel.Factory(
-            categoryRepo,
-            productRepo
-        )
-
-    val factoryCredit =
-        CreditViewModel.Factory(
-            repoCredit
-        )
-
-    val factorySave =
-        SaveViewModel.Factory(
-            productRepo
-        )
+    val creditViewModel: CreditViewModel = viewModel(factory = factoryCredit)
+    val catalogViewModel: CatalogViewModel = viewModel(factory = factoryCatalog)
+    val homeViewModel: HomeViewModel = viewModel(factory = factoryHome)
+    val saveViewModel: SaveViewModel = viewModel(factory = factorySave)
 
 
-    val creditViewModel: CreditViewModel =
-        viewModel(factory = factoryCredit)
 
-    val catalogViewModel: CatalogViewModel =
-        viewModel(factory = factoryCatalog)
+    //Si ocupan los roles  en otra pantalla los pueden sacar de aqui
+    val auth by remember { mutableStateOf(authRepo) }
+    val scope = rememberCoroutineScope()
 
-    val homeViewModel: HomeViewModel =
-        viewModel(factory = factoryHome)
+    var rol by remember { mutableStateOf<String?>(null) }
 
-    val saveViewModel: SaveViewModel =
-        viewModel(factory = factorySave)
-
-
-    val auth by remember {
-        mutableStateOf(authRepo)
+    LaunchedEffect(Unit) {
+        rol = userRepo.getRolUsuario()
     }
 
-    val pagerState =
-        rememberPagerState(
-            initialPage = initialPage,
-            pageCount = { screens.size }
+    if (rol == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+
+    //En esta parte pueden modificar que rol va a ver esa pantalla nueva
+
+    val screens = if (rol == "ADMINISTRADOR") {
+        listOf(
+            BottomBarScreen.Home,
+            BottomBarScreen.Catalogo,
+            BottomBarScreen.Creditos,
+            BottomBarScreen.Guardados,
+            BottomBarScreen.Examen
         )
+    } else {
+        listOf(
+            BottomBarScreen.Home,
+            BottomBarScreen.Catalogo,
+            BottomBarScreen.Creditos,
+            BottomBarScreen.Guardados
+        )
+    }
+
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        pageCount = { screens.size }
+    )
 
     LaunchedEffect(pagerState.currentPage) {
         if (pagerState.currentPage != 1) {
@@ -147,13 +145,10 @@ fun MainScreen(
         }
     }
 
-    val scope =
-        rememberCoroutineScope()
-
     Scaffold(
         bottomBar = {
-
             CustomBottomBar(
+                screens = screens,
                 pagerState = pagerState,
                 onTabSelected = { index ->
                     if (index == 1) initialCategoriaId = null
@@ -161,11 +156,9 @@ fun MainScreen(
                         pagerState.animateScrollToPage(index)
                     }
                 }
-
             )
-
         }
-    ) { innerPading ->
+    ) { innerPadding ->
 
         HorizontalPager(
             state = pagerState,
@@ -174,93 +167,46 @@ fun MainScreen(
         ) { page ->
 
             when (page) {
-
-                0 ->
-                    HomeScreen(
-                        viewModel = homeViewModel,
-
-                        onNavigateToCuenta = {
-                            navController.navigate("account")
-                        },
-
-                        onNotificationsClick = {
-                            navController.navigate("notification")
-                        },
-
-                        onLogOut = {
-                            scope.launch {
-                                val email = FirebaseAuth
-                                    .getInstance()
-                                    .currentUser
-                                    ?.email
-
-                                if (email != null) {
-                                    eliminarToken(email)
-                                }
-
-                                FirebaseMessaging.getInstance().deleteToken()
-
-                                auth.logout()
-
-                                navController.navigate("login") {
-                                    popUpTo("principal") {
-                                        inclusive = true
-                                    }
-                                }
+                0 -> HomeScreen(
+                    viewModel = homeViewModel,
+                    onNavigateToCuenta = { navController.navigate("account") },
+                    onNotificationsClick = { navController.navigate("notification") },
+                    onLogOut = {
+                        scope.launch {
+                            val email = FirebaseAuth.getInstance().currentUser?.email
+                            if (email != null) eliminarToken(email)
+                            FirebaseMessaging.getInstance().deleteToken()
+                            auth.logout()
+                            navController.navigate("login") {
+                                popUpTo("principal") { inclusive = true }
                             }
-                        },
-
-                        onGoDetail = {
-                            navController.navigate(
-                                "productDetail/$it"
-                            )
-                        },
-                        onGoCategoria = { categoriaId ->
-                            initialCategoriaId = categoriaId
-                            scope.launch {
-                                pagerState.animateScrollToPage(1)
-                            }
-                        },
-                    )
-
-                1 ->
-                    CatalogScreen(
-                        viewModel = catalogViewModel,
-                        initialCategoriaId = initialCategoriaId,
-                        onGoDetail = {
-                            navController.navigate(
-                                "productDetail/$it"
-                            )
-                        },
-                    )
-
-                2 ->
-                    CreditScreen(
-                        onOpenDetail = {
-                            navController.navigate(
-                                "creditDetail/$it"
-                            )
-                        },
-                        creditViewModel
-                    )
-
-                3 ->
-                    SaveScreen(
-                        viewModel = saveViewModel,
-                        onGoDetail = {
-                            navController.navigate(
-                                "productDetail/$it"
-                            )
                         }
-                    )
+                    },
+                    onGoDetail = { navController.navigate("productDetail/$it") },
+                    onGoCategoria = { categoriaId ->
+                        initialCategoriaId = categoriaId
+                        scope.launch { pagerState.animateScrollToPage(1) }
+                    }
+                )
 
-                4 ->
-                    ScreenEx()
+                1 -> CatalogScreen(
+                    viewModel = catalogViewModel,
+                    initialCategoriaId = initialCategoriaId,
+                    onGoDetail = { navController.navigate("productDetail/$it") }
+                )
 
+                2 -> CreditScreen(
+                    onOpenDetail = { navController.navigate("creditDetail/$it") },
+                    creditViewModel
+                )
+
+                3 -> SaveScreen(
+                    viewModel = saveViewModel,
+                    onGoDetail = { navController.navigate("productDetail/$it") }
+                )
+
+                4 -> if (rol == "ADMINISTRADOR") ScreenEx()
             }
-
         }
-
     }
-
 }

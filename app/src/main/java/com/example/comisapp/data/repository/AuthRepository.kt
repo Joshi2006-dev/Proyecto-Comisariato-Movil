@@ -83,6 +83,8 @@ class AuthRepository {
     }
 
 
+
+
     suspend fun register(email: String, pass: String) {
         //  Verificar si el email existe en la colección de Firestore
         val userCheck = db.collection("usuarios")
